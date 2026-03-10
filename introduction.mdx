@@ -1,0 +1,143 @@
+---
+title: Introduction
+description: Learn about Ryujinx, an open-source Nintendo Switch emulator written in C#
+---
+
+# Introduction to Ryujinx
+
+Ryujinx is an open-source Nintendo Switch emulator, originally created by gdkchan, written in C#. This emulator aims at providing excellent accuracy and performance, a user-friendly interface and consistent builds.
+
+<img src="https://git.ryujinx.app/ryubing/ryujinx/-/raw/master/docs/shell.png?ref_type=heads&inline=false" alt="Ryujinx Interface" />
+
+## Project History
+
+Ryujinx was written from scratch with development beginning in September 2017. On October 1st, 2024, the original Ryujinx project was discontinued as the creator was forced to abandon the project. The current version is a community-maintained fork intended to be a quality-of-life uplift for existing Ryujinx users.
+
+<Note>
+This is not a Ryujinx revival project. This is not a Phoenix project. It is a continuation focused on maintaining and improving the existing codebase for the community.
+</Note>
+
+## Key Features
+
+Ryujinx offers comprehensive Nintendo Switch emulation with the following capabilities:
+
+<CardGroup cols={2}>
+  <Card title="CPU Emulation" icon="microchip">
+    ARMeilleure CPU emulator with ARMv8 support, featuring Profiled Persistent Translation Cache for significantly reduced load times
+  </Card>
+  <Card title="GPU Emulation" icon="display">
+    Maxwell GPU emulation with OpenGL 4.5+, Vulkan, or Metal (MoltenVK) support, including resolution scaling and FSR
+  </Card>
+  <Card title="Audio Support" icon="volume-up">
+    Full audio output through OpenAL, SDL3, and libsoundio backends
+  </Card>
+  <Card title="Input Devices" icon="gamepad">
+    Keyboard, mouse, touch, Joy-Con, and controller support with motion controls
+  </Card>
+</CardGroup>
+
+### CPU: ARMeilleure
+
+The CPU emulator, ARMeilleure, emulates an ARMv8 CPU and currently has support for most 64-bit ARMv8 and some of the ARMv7 (and older) instructions, including partial 32-bit support.
+
+**How it works:**
+- Translates ARM code to a custom intermediate representation (IR)
+- Performs optimizations on the IR
+- Converts the optimized IR to x86 code
+
+**Memory Management Options:**
+- Three memory manager modes available
+- Software-based mode (slower)
+- Host-mapped modes (much faster)
+- Host unchecked mode (fastest, set by default)
+
+**Profiled Persistent Translation Cache (PPTC):**
+<Info>
+PPTC is enabled by default in Options menu > System tab. This feature caches translated functions so they don't need to be retranslated on every game launch.
+
+**Important:** You must launch the game at least twice to the title screen or beyond before performance improvements take effect on the third launch. These improvements are permanent.
+</Info>
+
+### GPU: Graphics Enhancements
+
+The GPU emulator provides six graphics enhancements:
+
+1. **Disk Shader Caching** - Reduces stuttering by caching compiled shaders
+2. **Resolution Scaling** - Render games at higher resolutions
+3. **Anti-Aliasing** - Smooth jagged edges
+4. **Scaling Filters** - Including AMD FidelityFX Super Resolution (FSR)
+5. **Anisotropic Filtering** - Improved texture quality at angles
+6. **Aspect Ratio Adjustment** - Custom aspect ratios
+
+**API Requirements:**
+- OpenGL: Version 4.5 minimum
+- Vulkan: Supported
+- Metal: Via MoltenVK on macOS
+
+### Input
+
+Ryujinx supports a wide range of input devices:
+- Keyboard and mouse
+- Touch input
+- Joy-Con controllers (with native motion support)
+- Nearly all third-party controllers
+- Dual-JoyCon motion (requires DS4Windows or BetterJoy)
+
+All input can be configured through the built-in input configuration menu.
+
+### DLC & Modifications
+
+<CardGroup cols={2}>
+  <Card title="Downloadable Content" icon="download">
+    Manage DLC and add-on content directly through the GUI
+  </Card>
+  <Card title="Mod Support" icon="puzzle-piece">
+    Support for romfs, exefs, and runtime mods including cheats. Access via GUI shortcut to game-specific mods folder
+  </Card>
+</CardGroup>
+
+### Configuration
+
+The emulator provides extensive configuration options:
+- Logging controls
+- Controller remapping
+- Graphics settings
+- Audio backends
+- System settings
+
+Configuration can be managed through:
+- **GUI**: User-friendly graphical interface
+- **Config file**: Manual editing of `Config.json` (accessible via File > Open Ryujinx Folder)
+
+## License
+
+Ryujinx is licensed under the [MIT license](https://git.ryujinx.app/ryubing/ryujinx/-/blob/master/LICENSE.txt?ref_type=heads), making it free and open-source software.
+
+<Note>
+The project uses code from libvpx (BSD license) and ffmpeg (LGPLv3 license). See the THIRDPARTY.md file for complete licensing details.
+</Note>
+
+## Community & Support
+
+- **Discord**: Join the community at [discord.gg/PEuzjrFXUA](https://discord.gg/PEuzjrFXUA)
+- **Wiki**: Guides and documentation available on the [Wiki](https://git.ryujinx.app/groups/ryubing/-/wikis/home)
+- **GitLab**: Source code hosted at [git.ryujinx.app](https://git.ryujinx.app/ryubing/ryujinx)
+
+## Next Steps
+
+Ready to get started? Check out the following pages:
+
+<CardGroup cols={2}>
+  <Card title="System Requirements" icon="server" href="/system-requirements">
+    Verify your system meets the minimum requirements
+  </Card>
+  <Card title="Installation" icon="download" href="/installation">
+    Download and install Ryujinx on your platform
+  </Card>
+  <Card title="Quick Start" icon="rocket" href="/quickstart">
+    Load your first game and start playing
+  </Card>
+  <Card title="Configuration" icon="sliders" href="/configuration">
+    Optimize settings for your system
+  </Card>
+</CardGroup>

@@ -1,0 +1,477 @@
+---
+title: 'Configuration'
+description: 'Configure Ryujinx emulator settings and system options'
+icon: 'gear'
+---
+
+Ryujinx stores all configuration in a `Config.json` file located in your Ryujinx data folder. This guide covers accessing configuration files and understanding key settings.
+
+## Accessing Configuration
+
+<Steps>
+  <Step title="Open Ryujinx Folder">
+    Access your Ryujinx configuration directory:
+    
+    **From the GUI:**
+    1. Open Ryujinx
+    2. Click **File > Open Ryujinx Folder**
+    3. Your data directory will open in your file manager
+  </Step>
+  
+  <Step title="Locate Config.json">
+    In the Ryujinx folder, you'll find:
+    
+    ```plaintext
+    Ryujinx/
+    ├── Config.json          # Main configuration file
+    ├── games/               # Save data and per-game configs
+    ├── profiles/            # User profiles
+    ├── system/              # Firmware and keys (prod.keys)
+    ├── mods/                # Global mods directory
+    └── sdcard/              # Virtual SD card
+    ```
+  </Step>
+  
+  <Step title="Backup Configuration">
+    **Important:** Always backup `Config.json` before manual edits:
+    
+    ```bash
+    cp Config.json Config.json.backup
+    ```
+  </Step>
+</Steps>
+
+## Configuration File Location
+
+The Ryujinx data folder location depends on your operating system and launch mode:
+
+<Tabs>
+  <Tab title="Windows">
+    **User Profile Mode:**
+    ```plaintext
+    C:\Users\<YourUsername>\AppData\Roaming\Ryujinx\
+    ```
+    
+    **Portable Mode:**
+    ```plaintext
+    <RyujinxInstallDirectory>\portable\
+    ```
+  </Tab>
+  
+  <Tab title="Linux">
+    **User Profile Mode:**
+    ```plaintext
+    ~/.config/Ryujinx/
+    ```
+    
+    **Portable Mode:**
+    ```plaintext
+    <RyujinxInstallDirectory>/portable/
+    ```
+  </Tab>
+  
+  <Tab title="macOS">
+    **User Profile Mode:**
+    ```plaintext
+    ~/Library/Application Support/Ryujinx/
+    ```
+    
+    **Logs Location:**
+    ```plaintext
+    ~/Library/Logs/Ryujinx/
+    ```
+    
+    **Portable Mode:**
+    ```plaintext
+    <RyujinxApp.app>/Contents/portable/
+    ```
+  </Tab>
+</Tabs>
+
+<Note>
+Portable mode is automatically enabled if a `portable` folder exists in the Ryujinx installation directory.
+</Note>
+
+## System Settings
+
+Configure core system emulation settings:
+
+### Language and Region
+
+<Steps>
+  <Step title="Open Settings">
+    Navigate to **File > Settings > System**
+  </Step>
+  
+  <Step title="Configure Language">
+    Select your preferred system language:
+    - American English (default)
+    - British English
+    - Japanese
+    - French
+    - German
+    - Spanish
+    - Italian
+    - And more...
+    
+    <Warning>
+    Changing the language requires restarting the emulator and may require refreshing the game library.
+    </Warning>
+  </Step>
+  
+  <Step title="Set Region">
+    Choose your region:
+    - USA (default)
+    - Europe
+    - Japan
+    - Australia
+    - China
+    - Korea
+    - Taiwan
+    
+    Region affects game compatibility and available content.
+  </Step>
+</Steps>
+
+### Time and Time Zone
+
+<Accordion title="System Time Configuration">
+  **Match System Time:**
+  - ☑ Enabled: Use your computer's current time
+  - ☐ Disabled: Set a custom time and date
+  
+  **Custom Time Settings:**
+  ```json
+  "SystemTimeOffset": 0,
+  "MatchSystemTime": false
+  ```
+  
+  **Time Zone:**
+  - Select from 400+ time zones
+  - Default: UTC
+  - Affects in-game time-based events
+</Accordion>
+
+### Docked Mode
+
+Switch between handheld and docked mode:
+
+<Tabs>
+  <Tab title="Docked Mode (TV)">
+    **Default setting** - Emulates the Switch in TV mode:
+    - Higher resolution output (1080p)
+    - Better performance in some games
+    - TV-optimized UI layouts
+    
+    ```json
+    "DockedMode": true
+    ```
+  </Tab>
+  
+  <Tab title="Handheld Mode">
+    Emulates portable Switch experience:
+    - Lower resolution (720p)
+    - Handheld-specific features
+    - May improve compatibility for some games
+    
+    ```json
+    "DockedMode": false
+    ```
+  </Tab>
+</Tabs>
+
+## Memory Configuration
+
+### Memory Manager Mode
+
+Ryujinx offers three memory management modes:
+
+<CardGroup cols={3}>
+  <Card title="Host Mapped (Unsafe)" icon="rocket">
+    **Default** - Fastest performance
+    
+    Uses direct memory mapping for maximum speed. Recommended for most users.
+  </Card>
+  
+  <Card title="Host Mapped (Checked)" icon="shield-check">
+    Balanced performance and safety
+    
+    Adds bounds checking with minimal performance impact.
+  </Card>
+  
+  <Card title="Software" icon="code">
+    Maximum compatibility
+    
+    Slower but most compatible. Use if you experience crashes with host-mapped modes.
+  </Card>
+</CardGroup>
+
+```json
+"MemoryManagerMode": "HostMappedUnsafe"
+```
+
+### DRAM Size
+
+Expand emulated system memory:
+
+- **4 GB** (default) - Standard Switch memory
+- **6 GB** - Extended memory for better performance
+- **8 GB** - Maximum expansion
+
+<Warning>
+Increasing DRAM size may improve performance in some games but can cause issues in others. Use 4GB unless a specific game requires more.
+</Warning>
+
+## Profiled Persistent Translation Cache (PPTC)
+
+PPTC dramatically reduces game load times:
+
+<Steps>
+  <Step title="Enable PPTC">
+    In **Settings > System**, ensure PPTC is enabled:
+    
+    ```json
+    "EnablePtc": true
+    ```
+    
+    <Note>
+    PPTC is enabled by default and highly recommended.
+    </Note>
+  </Step>
+  
+  <Step title="Initial Cache Generation">
+    **First Launch:** Game loads normally
+    
+    **Second Launch:** Game loads normally, cache builds in background
+    
+    **Third Launch+:** Significantly faster load times (30-60% reduction)
+  </Step>
+  
+  <Step title="Low Power PPTC">
+    For laptops and power-sensitive systems:
+    
+    ```json
+    "EnableLowPowerPtc": false
+    ```
+    
+    Enable to reduce CPU usage during cache generation.
+  </Step>
+</Steps>
+
+## File System Settings
+
+### Integrity Checks
+
+Validate game file integrity:
+
+```json
+"EnableFsIntegrityChecks": true
+```
+
+- **Enabled (default):** Verifies game files are not corrupted
+- **Disabled:** Faster loading but may allow corrupted data
+
+### FS Access Log Mode
+
+For advanced debugging:
+
+```json
+"FsGlobalAccessLogMode": 0
+```
+
+- **0** - Disabled (default)
+- **1** - Log file system reads
+- **2** - Log reads and writes
+- **3** - Verbose logging (performance impact)
+
+## Network Settings
+
+### Internet Access
+
+Control emulated internet connectivity:
+
+```json
+"EnableInternetAccess": false
+```
+
+<Warning>
+Enabling internet access allows games to connect online. Use with caution and understand your local laws regarding emulation and online services.
+</Warning>
+
+### LAN Play (Multiplayer)
+
+Configure local multiplayer settings:
+
+<Steps>
+  <Step title="Select Multiplayer Mode">
+    In **Settings > Network**, choose:
+    - **Disabled** (default)
+    - **LDN** - Local wireless multiplayer
+    - **LDN + Custom Server** - Online multiplayer via LDN server
+  </Step>
+  
+  <Step title="Network Interface">
+    Select the network adapter for LAN play:
+    
+    ```json
+    "MultiplayerLanInterfaceId": "0"
+    ```
+    
+    "0" uses the default network interface.
+  </Step>
+  
+  <Step title="LDN Passphrase (Optional)">
+    Set a 16-character passphrase for private networks:
+    
+    ```json
+    "MultiplayerLdnPassphrase": ""
+    ```
+  </Step>
+</Steps>
+
+## User Interface Settings
+
+### Discord Integration
+
+Show your currently playing game on Discord:
+
+```json
+"EnableDiscordIntegration": true
+```
+
+### Window Behavior
+
+<Accordion title="Remember Window State">
+  ```json
+  "RememberWindowState": true
+  ```
+  
+  Saves window size, position, and maximized state between sessions.
+</Accordion>
+
+<Accordion title="Show Confirm Exit Dialog">
+  ```json
+  "ShowConfirmExit": true
+  ```
+  
+  Displays confirmation when closing Ryujinx to prevent accidental closure.
+</Accordion>
+
+<Accordion title="Hide Cursor Mode">
+  ```json
+  "HideCursor": "OnIdle"
+  ```
+  
+  Options:
+  - **Never** - Always show cursor
+  - **OnIdle** (default) - Hide after inactivity
+  - **Always** - Always hide cursor in game
+</Accordion>
+
+### Update Checker
+
+Configure how Ryujinx checks for updates:
+
+- **Prompt at Startup** (default) - Shows update dialog when available
+- **Show Notification** - Displays non-intrusive notification
+- **Disabled** - Never check for updates
+
+```json
+"UpdateCheckerType": "PromptAtStartup"
+```
+
+## Per-Game Configuration
+
+Ryujinx supports game-specific settings:
+
+<Steps>
+  <Step title="Access Game Settings">
+    1. Right-click a game in the library
+    2. Select **Manage User Configuration**
+    3. Adjust settings specific to this game
+  </Step>
+  
+  <Step title="Configuration Isolation">
+    Per-game configs override global settings:
+    - Graphics settings
+    - CPU settings
+    - System settings
+    - Audio settings
+  </Step>
+  
+  <Step title="Configuration Location">
+    Game configs are stored in:
+    ```plaintext
+    <RyujinxFolder>/games/<TitleID>/Config.json
+    ```
+  </Step>
+</Steps>
+
+<Note>
+Input configuration is always global unless explicitly set to use per-game input.
+</Note>
+
+## Advanced Settings
+
+### Ignore Missing Services
+
+```json
+"IgnoreMissingServices": false
+```
+
+Some games may require disabling this for compatibility, but it can reduce stability.
+
+### Ignore Controller Applet
+
+```json
+"IgnoreApplet": false
+```
+
+Skips the controller configuration screen when starting games.
+
+### Skip User Profile Manager
+
+```json
+"SkipUserProfiles": false
+```
+
+Automatically uses the configured profile without showing the selection dialog.
+
+## Resetting Configuration
+
+<Warning>
+Resetting configuration will restore all settings to defaults. Your game saves will not be affected.
+</Warning>
+
+<Steps>
+  <Step title="Backup Current Settings">
+    Copy `Config.json` to a safe location
+  </Step>
+  
+  <Step title="Reset via GUI">
+    1. Open **File > Settings**
+    2. Click the **Reset** button (bottom-left)
+    3. Confirm the reset
+  </Step>
+  
+  <Step title="Manual Reset">
+    Delete or rename `Config.json`. Ryujinx will create a new default configuration on next launch.
+  </Step>
+</Steps>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Graphics Settings" icon="display" href="/user-guide/graphics-settings">
+    Configure graphics backend, resolution, and visual enhancements
+  </Card>
+  <Card title="Audio Settings" icon="volume" href="/user-guide/audio-settings">
+    Select audio backend and adjust volume
+  </Card>
+  <Card title="Input Configuration" icon="gamepad" href="/user-guide/input-configuration">
+    Set up controllers, keyboard, and motion controls
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/user-guide/troubleshooting">
+    Diagnose and fix common issues
+  </Card>
+</CardGroup>

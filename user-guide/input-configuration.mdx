@@ -1,0 +1,482 @@
+---
+title: 'Input Configuration'
+description: 'Configure controllers, keyboard input, and motion controls in Ryujinx'
+icon: 'gamepad'
+---
+
+Ryujinx supports a wide variety of input devices including controllers, keyboard/mouse, and motion controls. This guide covers setting up and configuring input for the best gaming experience.
+
+## Input Device Support
+
+Ryujinx supports the following input methods:
+
+<CardGroup cols={2}>
+  <Card title="Controllers" icon="gamepad">
+    - Xbox controllers
+    - PlayStation controllers
+    - Nintendo Switch Pro Controller
+    - Joy-Con (single or pair)
+    - Generic USB/Bluetooth controllers
+  </Card>
+  
+  <Card title="Keyboard & Mouse" icon="keyboard">
+    - Full keyboard mapping
+    - Mouse support for touch input
+    - Customizable hotkeys
+  </Card>
+  
+  <Card title="Motion Controls" icon="mobile">
+    - Native controller gyro support
+    - DS4/DualSense motion (via DS4Windows/DualSenseX)
+    - BetterJoy for Joy-Con motion
+  </Card>
+  
+  <Card title="Touch Input" icon="hand-pointer">
+    - Mouse emulation for touchscreen
+    - Native touch on compatible devices
+  </Card>
+</CardGroup>
+
+## Opening Input Configuration
+
+<Steps>
+  <Step title="Access Settings">
+    Navigate to **File > Settings**
+  </Step>
+  
+  <Step title="Go to Input Tab">
+    Click the **Input** tab in the settings window
+  </Step>
+  
+  <Step title="Choose Configuration Type">
+    Select between:
+    - **Global Configuration** - Used for all games
+    - **Per-Game Configuration** - Specific to individual games
+  </Step>
+</Steps>
+
+## Controller Configuration
+
+### Adding a Controller
+
+<Steps>
+  <Step title="Connect Your Controller">
+    Connect your controller via USB or Bluetooth before configuring
+  </Step>
+  
+  <Step title="Add Controller">
+    In the Input tab:
+    1. Click the **+** button
+    2. Select your controller from the list
+    3. Choose the emulated controller type
+  </Step>
+  
+  <Step title="Select Controller Type">
+    Choose which Switch controller to emulate:
+    
+    <Tabs>
+      <Tab title="Pro Controller">
+        **Recommended for most games**
+        
+        - Full controller with all buttons
+        - Best compatibility
+        - Standard layout
+      </Tab>
+      
+      <Tab title="Joy-Con Pair">
+        Dual Joy-Con configuration
+        
+        - Left and right Joy-Con together
+        - Enables motion controls per-hand
+        - Required for some games
+      </Tab>
+      
+      <Tab title="Left Joy-Con">
+        Single left Joy-Con
+        
+        - Horizontal orientation
+        - Limited buttons
+        - For specific games only
+      </Tab>
+      
+      <Tab title="Right Joy-Con">
+        Single right Joy-Con
+        
+        - Horizontal orientation  
+        - Limited buttons
+        - For specific games only
+      </Tab>
+    </Tabs>
+  </Step>
+  
+  <Step title="Configure Button Mappings">
+    Click on each button field and press the corresponding button on your controller
+  </Step>
+</Steps>
+
+### Controller Player Index
+
+Assign controllers to player slots:
+
+- **Player 1** (default) - Primary controller
+- **Player 2-8** - Additional controllers for local multiplayer
+
+```json
+"PlayerIndex": "Player1"
+```
+
+### Motion Controls
+
+Enable and configure motion controls:
+
+<Accordion title="Native Controller Motion">
+  Most modern controllers support gyro natively:
+  
+  **Supported Controllers:**
+  - Nintendo Switch Pro Controller
+  - PS4 DualShock 4
+  - PS5 DualSense
+  - Steam Controller
+  
+  Motion is automatically detected when using these controllers.
+</Accordion>
+
+<Accordion title="Joy-Con Motion Support">
+  For Joy-Con controllers:
+  
+  1. Install [BetterJoy](https://github.com/Davidobot/BetterJoy) or [JoyConLibrary](https://github.com/Looking-Glass/JoyconLib)
+  2. Connect Joy-Cons via Bluetooth
+  3. Launch BetterJoy before starting Ryujinx
+  4. Configure as Joy-Con Pair in input settings
+  
+  <Note>
+  Dual Joy-Con motion requires third-party drivers for proper support.
+  </Note>
+</Accordion>
+
+<Accordion title="DS4/DualSense Motion">
+  For PlayStation controllers:
+  
+  1. Install [DS4Windows](https://ds4-windows.com/) (for DS4) or [DualSenseX](https://github.com/Paliverse/DualSenseX) (for DualSense)
+  2. Configure the controller profile
+  3. Enable motion/gyro in the profile settings
+  4. Ryujinx will detect motion automatically
+</Accordion>
+
+### Rumble Support
+
+Ryujinx supports controller vibration:
+
+- Automatically enabled for compatible controllers
+- Adjustable intensity in games that support it
+- Can be disabled per-controller if desired
+
+## Keyboard Configuration
+
+### Default Keyboard Layout
+
+Ryujinx includes a default keyboard configuration:
+
+<Tabs>
+  <Tab title="Movement & D-Pad">
+    **Left Stick:**
+    - W - Up
+    - A - Left
+    - S - Down  
+    - D - Right
+    - F - L3 (stick press)
+    
+    **D-Pad:**
+    - Arrow Up
+    - Arrow Left
+    - Arrow Down
+    - Arrow Right
+  </Tab>
+  
+  <Tab title="Action Buttons">
+    **Face Buttons:**
+    - Z - A button
+    - X - B button
+    - C - X button
+    - V - Y button
+    
+    **Right Stick:**
+    - I - Up
+    - J - Left
+    - K - Down
+    - L - Right
+    - H - R3 (stick press)
+  </Tab>
+  
+  <Tab title="Triggers & Bumpers">
+    **Shoulder Buttons:**
+    - E - L button
+    - U - R button
+    - Q - ZL button
+    - O - ZR button
+    
+    **System Buttons:**
+    - Minus (-) - Minus button
+    - Plus (+) - Plus button
+  </Tab>
+</Tabs>
+
+### Custom Keyboard Mapping
+
+<Steps>
+  <Step title="Enable Keyboard Input">
+    In **Settings > Input**, enable:
+    ```json
+    "EnableKeyboard": true
+    ```
+  </Step>
+  
+  <Step title="Add Keyboard Profile">
+    1. Click the **+** button in Input settings
+    2. Select **Keyboard** as the backend
+    3. Choose controller type to emulate (Pro Controller recommended)
+  </Step>
+  
+  <Step title="Map Keys">
+    Click each button field and press your desired key:
+    - Click on "A Button" field
+    - Press your preferred key (e.g., Space)
+    - Repeat for all buttons
+  </Step>
+  
+  <Step title="Save Configuration">
+    Click **Save** to apply your keyboard layout
+  </Step>
+</Steps>
+
+### Mouse Support
+
+Enable mouse input for touchscreen emulation:
+
+```json
+"EnableMouse": true
+```
+
+<Note>
+Mouse support is useful for games with touch controls. Click and drag to simulate touch gestures.
+</Note>
+
+## Hotkeys
+
+Configure global keyboard hotkeys for quick access to emulator functions:
+
+### Default Hotkeys
+
+<CardGroup cols={2}>
+  <Card title="Graphics" icon="display">
+    - **F1** - Toggle VSync Mode
+    - **Unbound** - Resolution Scale Up
+    - **Unbound** - Resolution Scale Down
+  </Card>
+  
+  <Card title="Audio" icon="volume">
+    - **F2** - Toggle Mute
+    - **Unbound** - Volume Up
+    - **Unbound** - Volume Down
+  </Card>
+  
+  <Card title="Emulation" icon="play">
+    - **F4** - Show/Hide UI
+    - **F5** - Pause/Resume
+    - **Unbound** - Turbo Mode
+  </Card>
+  
+  <Card title="Utilities" icon="camera">
+    - **F8** - Take Screenshot
+    - **Unbound** - Custom VSync Interval +/-
+  </Card>
+</CardGroup>
+
+### Customizing Hotkeys
+
+<Steps>
+  <Step title="Open Hotkey Settings">
+    Navigate to **Settings > Hotkeys**
+  </Step>
+  
+  <Step title="Assign Keys">
+    Click on any hotkey field and press your desired key combination
+  </Step>
+  
+  <Step title="Configure Turbo Mode">
+    Turbo Mode can be:
+    - **Toggle** - Press to enable/disable
+    - **Hold** - Active only while key is held
+    
+    ```json
+    "TurboModeWhileHeld": false
+    ```
+  </Step>
+</Steps>
+
+<Warning>
+Avoid binding hotkeys to keys used in your controller/keyboard game controls to prevent conflicts.
+</Warning>
+
+## Advanced Input Settings
+
+### Input Backend Selection
+
+Ryujinx uses SDL3 for controller input by default:
+
+```json
+"Backend": "SDL3"
+```
+
+Available backends:
+- **SDL3** (default) - Best compatibility and features
+- **WindowKeyboard** - For keyboard input
+
+### Disable Input When Out of Focus
+
+Prevent input when Ryujinx is not the active window:
+
+```json
+"DisableInputWhenOutOfFocus": false
+```
+
+<Note>
+Enabling this setting prevents accidental inputs when using other applications.
+</Note>
+
+### Global vs Per-Game Input
+
+Choose whether to use global or per-game input configuration:
+
+<Steps>
+  <Step title="Global Input (Default)">
+    One input configuration used for all games:
+    
+    ```json
+    "UseInputGlobalConfig": false
+    ```
+  </Step>
+  
+  <Step title="Per-Game Input">
+    Configure different inputs for each game:
+    
+    1. Enable per-game input in game settings
+    2. Configure input specifically for that game
+    3. Global config is used as fallback
+  </Step>
+</Steps>
+
+## Controller Features
+
+### Rainbow LED Effect
+
+For controllers with RGB lighting:
+
+```json
+"RainbowSpeed": 1.0
+```
+
+Adjust the cycling speed of rainbow LED effects (0.0-2.0).
+
+### Deadzone Configuration
+
+Adjust analog stick deadzones if experiencing drift:
+
+<Note>
+Deadzone configuration is handled automatically by SDL3 but can be adjusted in advanced settings if needed.
+</Note>
+
+## Multiple Controllers
+
+### Local Multiplayer Setup
+
+<Steps>
+  <Step title="Connect Multiple Controllers">
+    Connect all controllers before configuring
+  </Step>
+  
+  <Step title="Add Each Controller">
+    1. Add first controller as Player 1
+    2. Add second controller as Player 2
+    3. Continue for up to 8 players
+  </Step>
+  
+  <Step title="Test in Game">
+    Some games automatically detect multiple controllers, others require in-game configuration
+  </Step>
+</Steps>
+
+## Troubleshooting Input Issues
+
+<Accordion title="Controller not detected">
+  **Solutions:**
+  1. Ensure controller is connected before starting Ryujinx
+  2. Check if controller is recognized by your OS
+  3. Update controller drivers
+  4. Try USB connection instead of Bluetooth
+  5. Restart Ryujinx after connecting controller
+</Accordion>
+
+<Accordion title="Buttons not responding">
+  **Common causes:**
+  - Incorrect button mapping
+  - Input backend issue
+  - Controller compatibility
+  
+  **Solutions:**
+  1. Reconfigure button mappings
+  2. Test controller in other applications
+  3. Check if SDL3 recognizes the controller
+  4. Try a different controller if available
+</Accordion>
+
+<Accordion title="Motion controls not working">
+  **For Joy-Cons:**
+  - Install and run BetterJoy before Ryujinx
+  - Ensure Joy-Cons are paired via Bluetooth
+  - Configure as Joy-Con Pair, not Pro Controller
+  
+  **For DS4/DualSense:**
+  - Install DS4Windows or DualSenseX
+  - Enable motion/gyro in driver settings
+  - Use USB connection for best results
+  
+  **For Pro Controller:**
+  - Should work natively
+  - Ensure latest controller firmware
+  - Try reconnecting the controller
+</Accordion>
+
+<Accordion title="Input lag or delayed response">
+  **Solutions:**
+  1. Use USB connection instead of Bluetooth
+  2. Reduce VSync/graphics settings
+  3. Close background applications
+  4. Check if "Disable Input When Out of Focus" is enabled
+  5. Update controller drivers
+</Accordion>
+
+<Accordion title="Analog sticks drifting">
+  **Solutions:**
+  1. Increase deadzone settings (if available)
+  2. Clean the controller (compressed air)
+  3. Calibrate controller in OS settings
+  4. Test with a different controller
+</Accordion>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Graphics Settings" icon="display" href="/user-guide/graphics-settings">
+    Optimize visual quality and performance
+  </Card>
+  <Card title="Audio Settings" icon="volume" href="/user-guide/audio-settings">
+    Configure audio backend and volume
+  </Card>
+  <Card title="Configuration" icon="gear" href="/user-guide/configuration">
+    Configure system and emulator settings
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/user-guide/troubleshooting">
+    Diagnose and fix common issues
+  </Card>
+</CardGroup>

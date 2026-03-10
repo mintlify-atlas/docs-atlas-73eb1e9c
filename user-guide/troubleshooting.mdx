@@ -1,0 +1,699 @@
+---
+title: 'Troubleshooting'
+description: 'Diagnose and fix common issues in Ryujinx emulator'
+icon: 'wrench'
+---
+
+This guide helps you diagnose and resolve common issues when using Ryujinx. Follow these troubleshooting steps to get your games running smoothly.
+
+## System Requirements
+
+Before troubleshooting, verify your system meets the minimum requirements:
+
+<CardGroup cols={2}>
+  <Card title="RAM" icon="memory">
+    **Minimum: 8GB**
+    
+    Insufficient RAM is a common cause of crashes and poor performance.
+  </Card>
+  
+  <Card title="Graphics" icon="display">
+    **OpenGL 4.5+ or Vulkan 1.2+**
+    
+    Update graphics drivers to the latest version.
+  </Card>
+  
+  <Card title="CPU" icon="microchip">
+    **64-bit CPU**
+    
+    Modern multi-core CPU recommended for best performance.
+  </Card>
+  
+  <Card title="Operating System" icon="desktop">
+    **Windows 10/11, Linux, or macOS**
+    
+    Keep your OS updated to the latest version.
+  </Card>
+</CardGroup>
+
+## Log Files
+
+Log files are essential for diagnosing issues:
+
+### Locating Log Files
+
+<Tabs>
+  <Tab title="Windows">
+    **Default Location:**
+    ```plaintext
+    %APPDATA%\Ryujinx\Logs\
+    ```
+    
+    **Or from Ryujinx executable directory:**
+    ```plaintext
+    <RyujinxInstallDir>\Logs\
+    ```
+    
+    **Quick Access:**
+    1. Press `Win + R`
+    2. Type `%APPDATA%\Ryujinx\Logs`
+    3. Press Enter
+  </Tab>
+  
+  <Tab title="Linux">
+    **Default Location:**
+    ```plaintext
+    ~/.config/Ryujinx/Logs/
+    ```
+    
+    **Quick Access:**
+    ```bash
+    cd ~/.config/Ryujinx/Logs
+    ls -lt  # List logs, newest first
+    ```
+  </Tab>
+  
+  <Tab title="macOS">
+    **Default Location:**
+    ```plaintext
+    ~/Library/Logs/Ryujinx/
+    ```
+    
+    **Quick Access:**
+    ```bash
+    open ~/Library/Logs/Ryujinx/
+    ```
+    
+    **Fallback Location:**
+    ```plaintext
+    ~/Library/Application Support/Ryujinx/Logs/
+    ```
+  </Tab>
+</Tabs>
+
+### Enabling Detailed Logging
+
+For better diagnostics, enable additional logging:
+
+<Steps>
+  <Step title="Open Logging Settings">
+    Navigate to **File > Settings > Logging**
+  </Step>
+  
+  <Step title="Enable Log Levels">
+    Enable these log levels:
+    
+    ```json
+    "LoggingEnableDebug": true,
+    "LoggingEnableStub": true,
+    "LoggingEnableInfo": true,
+    "LoggingEnableWarn": true,
+    "LoggingEnableError": true
+    ```
+    
+    <Note>
+    Trace logging provides even more detail but impacts performance:
+    ```json
+    "LoggingEnableTrace": true
+    ```
+    </Note>
+  </Step>
+  
+  <Step title="Enable File Logging">
+    Ensure file logging is enabled:
+    
+    ```json
+    "LoggingEnableFileLog": true
+    ```
+  </Step>
+  
+  <Step title="Reproduce the Issue">
+    - Save settings and restart Ryujinx
+    - Reproduce the problem
+    - Check the latest log file for error messages
+  </Step>
+</Steps>
+
+### Reading Log Files
+
+Log files are named by timestamp:
+```plaintext
+Ryujinx_2026_03_10_14_30_25.log
+```
+
+Look for lines containing:
+- **ERROR** - Critical errors
+- **WARN** - Warnings that may indicate issues
+- **STUB** - Unimplemented features being used
+
+## Common Issues
+
+### Startup and Installation Issues
+
+<Accordion title="Ryujinx won't start / Crashes on launch">
+  **Solutions:**
+  
+  1. **Check for missing dependencies:**
+     - **Windows:** Install [.NET 8.0 Runtime](https://dotnet.microsoft.com/download)
+     - **Linux:** Install .NET 8.0 via package manager
+     - **macOS:** .NET is bundled with Ryujinx
+  
+  2. **Verify system requirements:**
+     - 64-bit operating system
+     - Minimum 8GB RAM
+     - OpenGL 4.5+ or Vulkan 1.2+ support
+  
+  3. **Run as administrator (Windows):**
+     - Right-click Ryujinx.exe
+     - Select "Run as administrator"
+  
+  4. **Check antivirus/firewall:**
+     - Add Ryujinx to antivirus exceptions
+     - Temporarily disable to test
+  
+  5. **Delete configuration and restart:**
+     - Backup and delete `Config.json`
+     - Ryujinx will create a new default config
+  
+  6. **Check logs for specific errors:**
+     - Look in Logs folder for recent log files
+     - Search for ERROR or EXCEPTION messages
+</Accordion>
+
+<Accordion title="'Failed to initialize graphics' error">
+  **Causes:**
+  - Outdated graphics drivers
+  - Unsupported graphics backend
+  - GPU doesn't meet requirements
+  
+  **Solutions:**
+  
+  1. **Update graphics drivers:**
+     - NVIDIA: GeForce Experience or nvidia.com
+     - AMD: Radeon Software or amd.com
+     - Intel: Intel Driver & Support Assistant
+  
+  2. **Try different graphics backend:**
+     - Edit `Config.json`
+     - Change `"GraphicsBackend"` from `"Vulkan"` to `"OpenGl"` (or vice versa)
+     - Restart Ryujinx
+  
+  3. **Verify GPU capabilities:**
+     - Windows: Run `dxdiag` and check GPU
+     - Linux: Run `glxinfo | grep OpenGL` or `vulkaninfo`
+     - macOS: About This Mac > Graphics
+  
+  4. **On multi-GPU systems:**
+     - Force Ryujinx to use dedicated GPU
+     - Windows: Graphics Settings > Add Ryujinx > High Performance
+</Accordion>
+
+<Accordion title="Keys/Firmware related errors">
+  **Error messages:**
+  - "Keys are missing"
+  - "Firmware is not installed"
+  - "Failed to decrypt"
+  
+  **Solutions:**
+  
+  1. **Install prod.keys:**
+     - Obtain `prod.keys` file (legally required)
+     - Place in `<RyujinxFolder>/system/`
+     - File must be named exactly `prod.keys`
+  
+  2. **Install firmware:**
+     - Get Nintendo Switch firmware
+     - File > Tools > Install Firmware
+     - Select firmware file/folder
+     - Follow installation prompts
+  
+  3. **Verify keys are correct:**
+     - Keys must match your firmware version
+     - Old or incorrect keys cause decryption errors
+  
+  4. **Check file permissions:**
+     - Ensure Ryujinx can read the keys file
+     - Check folder permissions (Linux/macOS)
+</Accordion>
+
+### Game-Specific Issues
+
+<Accordion title="Game doesn't load / Black screen">
+  **Diagnostic steps:**
+  
+  1. **Verify game file integrity:**
+     - Check if file is complete and not corrupted
+     - Try loading a different game to test emulator
+  
+  2. **Check firmware and keys:**
+     - Ensure latest firmware is installed
+     - Verify `prod.keys` is present and valid
+  
+  3. **Enable file integrity checks:**
+     ```json
+     "EnableFsIntegrityChecks": true
+     ```
+  
+  4. **Try different graphics backend:**
+     - Switch between Vulkan and OpenGL
+     - Some games work better with specific backends
+  
+  5. **Check game compatibility:**
+     - Not all games are fully compatible
+     - Check compatibility list or community forums
+  
+  6. **Review logs:**
+     - Look for "Missing service" errors
+     - Check for decryption failures
+     - Note any ERROR messages
+</Accordion>
+
+<Accordion title="Game crashes during gameplay">
+  **Common causes and solutions:**
+  
+  1. **Insufficient RAM:**
+     - Close other applications
+     - Upgrade to 16GB RAM if possible
+     - Don't use 6GB or 8GB DRAM expansion unless needed
+  
+  2. **Graphics driver crash:**
+     - Update to latest GPU drivers
+     - Reduce graphics settings (resolution scale, AA)
+     - Try different graphics backend
+  
+  3. **Shader compilation issues:**
+     - Enable shader cache if disabled
+     - Delete shader cache and rebuild:
+       ```plaintext
+       <RyujinxFolder>/games/<TitleID>/cache/
+       ```
+  
+  4. **Mods causing issues:**
+     - Disable all mods in Mod Manager
+     - Test game without mods
+     - Re-enable mods one by one to find culprit
+  
+  5. **Game-specific bugs:**
+     - Check if known issue
+     - Try different game version/update
+     - Report on GitHub if reproducible
+</Accordion>
+
+<Accordion title="Poor performance / Low FPS">
+  **Performance optimization:**
+  
+  1. **Enable PPTC (Profiled Persistent Translation Cache):**
+     ```json
+     "EnablePtc": true
+     ```
+     - Requires 2-3 launches to build cache
+     - Dramatically improves load times and stability
+  
+  2. **Reduce graphics settings:**
+     - Resolution Scale: 1x or 2x
+     - Anti-Aliasing: None
+     - Disable texture recompression
+     - Use Bilinear scaling filter
+  
+  3. **Optimize backend:**
+     - Use Vulkan for best performance (if supported)
+     - Enable shader cache
+     - Set Backend Threading to Auto
+  
+  4. **System optimization:**
+     - Close background applications
+     - Disable browser, Discord, streaming software
+     - Set Windows power plan to High Performance
+     - Update all drivers
+  
+  5. **Memory manager mode:**
+     ```json
+     "MemoryManagerMode": "HostMappedUnsafe"
+     ```
+     - Default and fastest option
+     - Try "HostMapped" if experiencing crashes
+  
+  6. **CPU turbo multiplier:**
+     - Don't change unless you know what you're doing
+     - Values over 100% speed up emulation but can break games
+</Accordion>
+
+### Graphics Issues
+
+<Accordion title="Graphical glitches / Corrupted textures">
+  **Solutions:**
+  
+  1. **Clear shader cache:**
+     - Navigate to `<RyujinxFolder>/games/<TitleID>/cache/`
+     - Delete shader cache files
+     - Restart game (cache will rebuild)
+  
+  2. **Try different graphics backend:**
+     - Vulkan → OpenGL or vice versa
+     - Different backends handle some effects differently
+  
+  3. **Update GPU drivers:**
+     - Critical for graphics stability
+     - Use clean installation if available
+  
+  4. **Adjust graphics settings:**
+     - Disable texture recompression
+     - Change anti-aliasing method
+     - Try different scaling filter
+  
+  5. **Check for overheating:**
+     - Monitor GPU temperature
+     - Clean dust from cooling system
+     - Reduce overclock if applicable
+  
+  6. **Macro HLE setting:**
+     ```json
+     "EnableMacroHLE": true
+     ```
+     - Try toggling this setting
+     - Some games have issues with it enabled/disabled
+</Accordion>
+
+<Accordion title="Screen tearing / VSync issues">
+  **Solutions:**
+  
+  1. **VSync mode:**
+     ```json
+     "VSyncMode": "Switch"
+     ```
+     - Use "Switch" mode for proper frame pacing
+     - Avoid "Unbounded" unless using VRR display
+  
+  2. **Force VSync in GPU driver:**
+     - NVIDIA Control Panel: Manage 3D Settings
+     - AMD Radeon Settings: Gaming > Global Settings
+     - Force VSync on for Ryujinx
+  
+  3. **Window vs Fullscreen:**
+     - Try switching between windowed and fullscreen
+     - Some setups have better VSync in one mode
+  
+  4. **Enable FreeSync/G-Sync:**
+     - If you have compatible monitor
+     - May allow using Unbounded VSync without tearing
+</Accordion>
+
+### Audio Issues
+
+<Accordion title="No audio / Audio crackling">
+  **For detailed audio troubleshooting, see the [Audio Settings](/user-guide/audio-settings#troubleshooting-audio-issues) guide.**
+  
+  **Quick fixes:**
+  
+  1. **Change audio backend:**
+     - Try SDL3, OpenAL, or SoundIo
+     - SDL3 is usually most reliable
+  
+  2. **Check volume:**
+     - Ryujinx volume slider (Settings > Audio)
+     - System volume mixer
+     - In-game audio settings
+  
+  3. **Audio driver updates:**
+     - Update audio drivers (especially Realtek)
+     - Update motherboard chipset drivers
+  
+  4. **Disable audio enhancements:**
+     - Windows: Sound Settings > Device Properties > Disable all enhancements
+</Accordion>
+
+### Input Issues
+
+<Accordion title="Controller not working">
+  **For detailed input troubleshooting, see the [Input Configuration](/user-guide/input-configuration#troubleshooting-input-issues) guide.**
+  
+  **Quick solutions:**
+  
+  1. **Connect controller before starting Ryujinx:**
+     - Ryujinx detects controllers on startup
+     - Reconnect and restart if controller was connected later
+  
+  2. **Reconfigure input:**
+     - Settings > Input
+     - Remove and re-add controller
+     - Remap all buttons
+  
+  3. **Check controller in other applications:**
+     - Verify controller works in other games
+     - Test with gamepad tester tools
+  
+  4. **USB vs Bluetooth:**
+     - Try wired USB connection
+     - Bluetooth can have latency/reliability issues
+  
+  5. **Update controller firmware:**
+     - Check manufacturer's website for updates
+     - Xbox controllers: Xbox Accessories app
+     - PS controllers: PC/Steam firmware updates
+</Accordion>
+
+## Advanced Troubleshooting
+
+### Per-Game Configuration
+
+Some games require specific settings:
+
+<Steps>
+  <Step title="Access Game Settings">
+    Right-click game > **Manage User Configuration**
+  </Step>
+  
+  <Step title="Try These Settings">
+    For problematic games:
+    
+    **Graphics:**
+    - Resolution Scale: 1x
+    - Backend: Try both Vulkan and OpenGL
+    - Disable texture recompression
+    
+    **System:**
+    - DRAM Size: 4GB (default)
+    - Memory Manager: HostMappedUnsafe
+    - Docked Mode: Try both on and off
+    
+    **Audio:**
+    - Try different backends
+  </Step>
+  
+  <Step title="Test Changes">
+    Launch game and test if issues are resolved
+  </Step>
+</Steps>
+
+### Configuration Reset
+
+If Ryujinx becomes unstable:
+
+<Warning>
+**Before resetting:**
+- Backup `Config.json`
+- Note your current settings
+- Save data is not affected by config reset
+</Warning>
+
+<Steps>
+  <Step title="Full Reset via GUI">
+    1. File > Settings
+    2. Click **Reset** button (bottom-left)
+    3. Confirm reset
+    4. Ryujinx restarts with default settings
+  </Step>
+  
+  <Step title="Manual Reset">
+    1. Close Ryujinx completely
+    2. Navigate to Ryujinx folder
+    3. Rename or delete `Config.json`
+    4. Restart Ryujinx (new config is created)
+  </Step>
+</Steps>
+
+### Clean Installation
+
+For persistent issues, perform a clean installation:
+
+<Steps>
+  <Step title="Backup Important Data">
+    Backup these folders:
+    - `games/` - Save data and per-game configs
+    - `profiles/` - User profiles
+    - `system/` - Keys and firmware
+  </Step>
+  
+  <Step title="Uninstall Ryujinx">
+    - Delete Ryujinx installation folder
+    - Delete Ryujinx data folder:
+      - Windows: `%APPDATA%\Ryujinx`
+      - Linux: `~/.config/Ryujinx`
+      - macOS: `~/Library/Application Support/Ryujinx`
+  </Step>
+  
+  <Step title="Reinstall Ryujinx">
+    - Download latest version
+    - Extract to new location
+    - Run Ryujinx
+  </Step>
+  
+  <Step title="Restore Data">
+    - Copy backed-up folders to new Ryujinx folder
+    - Do NOT restore `Config.json` - let Ryujinx create a fresh one
+    - Reconfigure settings manually
+  </Step>
+</Steps>
+
+## Debug Mode
+
+For developers or advanced troubleshooting:
+
+### Enable Debug Features
+
+```json
+"LoggingEnableDebug": true,
+"LoggingEnableTrace": true,
+"LoggingGraphicsDebugLevel": "All"
+```
+
+<Warning>
+Debug logging significantly impacts performance. Only enable when needed for troubleshooting.
+</Warning>
+
+### GDB Stub (Developers)
+
+For debugging game code:
+
+```json
+"EnableGdbStub": true,
+"GdbStubPort": 55555,
+"DebuggerSuspendOnStart": false
+```
+
+Connect debugger to `localhost:55555`.
+
+## Getting Help
+
+### Before Asking for Help
+
+<Steps>
+  <Step title="Search Existing Resources">
+    - Check this documentation
+    - Search GitHub issues
+    - Look through Discord/community forums
+  </Step>
+  
+  <Step title="Gather Information">
+    Collect:
+    - Ryujinx version
+    - Operating system and version
+    - CPU and GPU models
+    - RAM amount
+    - Graphics backend being used
+    - Game Title ID and version
+    - Log files showing the issue
+  </Step>
+  
+  <Step title="Try Basic Troubleshooting">
+    - Update Ryujinx to latest version
+    - Update GPU drivers
+    - Try different graphics backend
+    - Test with default settings
+    - Check logs for obvious errors
+  </Step>
+</Steps>
+
+### Where to Get Help
+
+<CardGroup cols={2}>
+  <Card title="GitHub Issues" icon="github" href="https://git.ryujinx.app/ryubing/ryujinx/-/issues">
+    Report bugs and technical issues
+  </Card>
+  
+  <Card title="Discord Community" icon="discord" href="https://discord.gg/PEuzjrFXUA">
+    Community support and discussion
+  </Card>
+  
+  <Card title="Documentation" icon="book">
+    Check other guides in this documentation
+  </Card>
+  
+  <Card title="Wiki" icon="file-lines" href="https://git.ryujinx.app/groups/ryubing/-/wikis/home">
+    Official Ryujinx wiki
+  </Card>
+</CardGroup>
+
+### Reporting Bugs
+
+When reporting issues on GitHub:
+
+1. **Search for existing issues first**
+2. **Use the issue template**
+3. **Provide complete information:**
+   - System specifications
+   - Ryujinx version
+   - Game details (Title ID, version)
+   - Steps to reproduce
+   - Log files (attach or paste relevant sections)
+   - Screenshots/videos if applicable
+4. **Be descriptive and patient**
+
+## Error Code Reference
+
+Common error codes and their meanings:
+
+<Accordion title="Error: Missing service">
+  **Meaning:** Game is calling a Switch system service that Ryujinx hasn't implemented
+  
+  **Solutions:**
+  - Usually not critical - game may still work
+  - Check if setting `"IgnoreMissingServices": true` helps
+  - Report to developers if game is unplayable
+</Accordion>
+
+<Accordion title="Error: Failed to decrypt">
+  **Meaning:** Missing or incorrect encryption keys
+  
+  **Solutions:**
+  - Install proper `prod.keys` file
+  - Ensure keys match firmware version
+  - Verify game files are not corrupted
+</Accordion>
+
+<Accordion title="Error: Out of memory">
+  **Meaning:** System ran out of available RAM
+  
+  **Solutions:**
+  - Close other applications
+  - Ensure you have minimum 8GB RAM
+  - Don't use 6GB or 8GB DRAM expansion
+  - Lower graphics settings
+</Accordion>
+
+<Accordion title="Error: Shader compilation failed">
+  **Meaning:** GPU driver couldn't compile game shaders
+  
+  **Solutions:**
+  - Update GPU drivers
+  - Clear shader cache and rebuild
+  - Try different graphics backend
+  - Check GPU supports required OpenGL/Vulkan version
+</Accordion>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Configuration" icon="gear" href="/user-guide/configuration">
+    Review configuration options
+  </Card>
+  <Card title="Graphics Settings" icon="display" href="/user-guide/graphics-settings">
+    Optimize graphics settings
+  </Card>
+  <Card title="Audio Settings" icon="volume" href="/user-guide/audio-settings">
+    Configure audio backend
+  </Card>
+  <Card title="Game Loading" icon="gamepad" href="/user-guide/game-loading">
+    Learn about game file formats
+  </Card>
+</CardGroup>

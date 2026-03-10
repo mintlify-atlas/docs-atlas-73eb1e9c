@@ -1,0 +1,282 @@
+---
+title: Audio System
+description: Learn about Ryujinx's audio backends and output capabilities
+icon: volume-high
+---
+
+Ryujinx features full audio output support through multiple backends, providing high-quality sound reproduction for Nintendo Switch games.
+
+<Note>
+Audio output is fully supported. Audio input (microphone) is currently not supported.
+</Note>
+
+## Audio Backends
+
+Ryujinx uses C# wrappers for industry-standard audio libraries, with automatic fallback between backends:
+
+<CardGroup cols={3}>
+  <Card title="OpenAL" icon="headphones" iconType="duotone">
+    **Primary** - Cross-platform 3D audio library with excellent compatibility
+  </Card>
+  <Card title="SDL3" icon="gamepad" iconType="duotone">
+    **Fallback** - Simple DirectMedia Layer 3 for broad hardware support
+  </Card>
+  <Card title="libsoundio" icon="wave-square" iconType="duotone">
+    **Fallback** - Low-latency cross-platform audio I/O library
+  </Card>
+</CardGroup>
+
+## OpenAL Backend
+
+The primary audio backend uses **OpenAL Soft**, an open-source 3D audio API:
+
+### Features
+
+- **Cross-platform**: Works on Windows, Linux, and macOS
+- **3D Positioning**: Spatial audio support for immersive games
+- **HRTF Support**: Head-Related Transfer Function for binaural audio
+- **Multiple Output Devices**: Easy device selection and switching
+- **Low Latency**: Minimal audio delay for responsive gameplay
+
+### Implementation Details
+
+```csharp
+// From OpenALHardwareDeviceDriver.cs
+public OpenALHardwareDeviceDriver()
+{
+    _device = ALC.OpenDevice(string.Empty);
+    _context = ALC.CreateContext(_device, new ALContextAttributes());
+    // Session management and buffer handling...
+}
+```
+
+The OpenAL backend:
+- Opens the default audio device automatically
+- Creates a dedicated update thread for audio processing
+- Manages multiple concurrent audio sessions
+- Supports volume control per session
+
+<Info>
+OpenAL is automatically selected if available on your system. It provides the best audio quality and performance.
+</Info>
+
+## SDL3 Backend
+
+The SDL3 backend provides fallback audio support:
+
+### Advantages
+
+- **Bundled**: Comes with SDL3, no extra dependencies
+- **Reliable**: Battle-tested in countless games
+- **Simple**: Straightforward audio output
+- **Compatible**: Works on systems where OpenAL may have issues
+
+<Note>
+SDL3 is the latest version of Simple DirectMedia Layer, completely rewritten for modern systems.
+</Note>
+
+## libsoundio Backend
+
+The libsoundio backend offers low-latency audio:
+
+### Features
+
+- **Ultra-low Latency**: Optimized for minimal delay
+- **Backend Flexibility**: Uses WASAPI (Windows), ALSA/PulseAudio (Linux), CoreAudio (macOS)
+- **Sample Rate Conversion**: High-quality resampling
+- **Channel Layout Support**: Flexible speaker configurations
+
+## Audio Architecture
+
+Ryujinx's audio system consists of several layers:
+
+### Audio Renderer
+
+The audio renderer emulates the Switch's audio processing:
+
+<CardGroup cols={2}>
+  <Card title="Voice Processing" icon="microphone-lines">
+    Handles individual audio voices (sound sources) with mixing and effects
+  </Card>
+  <Card title="Effect Processing" icon="sliders">
+    Applies audio effects like reverb, delay, and filters
+  </Card>
+  <Card title="Mix Buffers" icon="layer-group">
+    Manages audio mixing for multiple channels and sources
+  </Card>
+  <Card title="Sink Output" icon="volume-high">
+    Final output to hardware through selected backend
+  </Card>
+</CardGroup>
+
+### Audio Effects Supported
+
+| Effect Type | Description |
+|-------------|-------------|
+| **Reverb** | 3D reverb for spatial audio environments |
+| **Delay** | Echo and delay effects |
+| **Biquad Filter** | Frequency filtering (low-pass, high-pass, etc.) |
+| **Limiter** | Dynamic range compression |
+| **Auxiliary Buffer** | Additional effect processing chains |
+| **Compressor** | Audio dynamics compression |
+
+```csharp
+// Audio effects are implemented in:
+// src/Ryujinx.Audio/Renderer/Server/Effect/
+```
+
+## Sample Format Support
+
+Ryujinx supports multiple audio sample formats:
+
+- **PCM16**: 16-bit signed integer (most common)
+- **PCM Float**: 32-bit floating-point for high precision
+- **Multiple Sample Rates**: Automatic resampling to match your hardware
+
+<Info>
+The target sample rate is **48000 Hz** (48 kHz), which matches the Nintendo Switch's native audio output.
+</Info>
+
+## Channel Configuration
+
+Flexible audio channel support:
+
+| Configuration | Description |
+|--------------|-------------|
+| **Mono** | Single channel |
+| **Stereo** | Standard left/right (most common) |
+| **5.1 Surround** | Six channels for home theater |
+| **7.1 Surround** | Eight channels for advanced setups |
+
+<Note>
+If a game requests an unsupported channel count, Ryujinx automatically downmixes to stereo.
+</Note>
+
+## Device Session Management
+
+The audio system manages multiple simultaneous audio sessions:
+
+### Session Features
+
+- **Independent Volume Control**: Each session can have its own volume level
+- **Sample Rate Conversion**: Automatic resampling when needed
+- **Buffer Management**: Circular buffer for smooth audio playback
+- **Thread Safety**: Lock-free audio updates where possible
+
+```csharp
+// From OpenALHardwareDeviceDriver.cs
+public IHardwareDeviceSession OpenDeviceSession(
+    Direction direction,
+    IVirtualMemoryManager memoryManager,
+    SampleFormat sampleFormat,
+    uint sampleRate,
+    uint channelCount)
+{
+    if (channelCount == 0)
+        channelCount = 2; // Default to stereo
+    
+    if (sampleRate == 0)
+        sampleRate = Constants.TargetSampleRate; // 48000 Hz
+}
+```
+
+## Audio Buffer Management
+
+Efficient buffer management ensures smooth playback:
+
+- **Ring Buffers**: Circular buffers prevent audio underruns
+- **Automatic Queueing**: Buffers are queued ahead of playback
+- **Buffer Recycling**: Memory-efficient buffer reuse
+- **Dynamic Adjustment**: Adapts to system load
+
+## Volume Control
+
+Granular volume management:
+
+<CardGroup cols={2}>
+  <Card title="Master Volume" icon="sliders">
+    Global volume control affects all audio output
+  </Card>
+  <Card title="Per-Session Volume" icon="gauge-high">
+    Individual volume levels for different audio streams
+  </Card>
+</CardGroup>
+
+## Performance Optimization
+
+The audio system is optimized for minimal CPU usage:
+
+- **Dedicated Audio Thread**: Separate thread prevents audio glitches
+- **Lock-Free Updates**: Concurrent data structures reduce contention
+- **Efficient Mixing**: Optimized audio mixing algorithms
+- **Hardware Acceleration**: Uses audio hardware features when available
+
+## Audio Output Latency
+
+Ryujinx aims for low audio latency:
+
+| Backend | Typical Latency |
+|---------|----------------|
+| **OpenAL** | 20-40ms |
+| **SDL3** | 30-50ms |
+| **libsoundio** | 10-30ms |
+
+<Info>
+Actual latency depends on your audio driver, hardware, and system configuration. Lower latency provides better audio-visual synchronization.
+</Info>
+
+## Current Limitations
+
+<Warning>
+**Audio Input Not Supported**: Microphone input and voice chat features in games will not work.
+</Warning>
+
+Games that require microphone input may:
+- Skip microphone-related features
+- Display warnings or errors
+- Work with degraded functionality
+
+## Technical Details
+
+Key source directories:
+
+- **Audio Core**: `src/Ryujinx.Audio/`
+- **OpenAL Backend**: `src/Ryujinx.Audio.Backends.OpenAL/`
+- **SDL3 Backend**: `src/Ryujinx.Audio.Backends.SDL3/`
+- **libsoundio Backend**: `src/Ryujinx.Audio.Backends.SoundIo/`
+- **Audio Renderer**: `src/Ryujinx.Audio/Renderer/`
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="No audio output">
+    - Check your system audio settings
+    - Verify audio device is not muted
+    - Try switching audio backends if available
+    - Check Ryujinx volume settings
+  </Accordion>
+  
+  <Accordion title="Audio crackling or stuttering">
+    - Increase audio buffer size if possible
+    - Close background applications
+    - Check CPU usage (high load can cause audio issues)
+    - Update audio drivers
+  </Accordion>
+  
+  <Accordion title="Audio out of sync with video">
+    - This may indicate performance issues
+    - Enable VSync to stabilize frame timing
+    - Try different audio backends
+    - Check if the game is running at full speed
+  </Accordion>
+  
+  <Accordion title="Game crashes on audio initialization">
+    - Try disabling audio temporarily
+    - Update audio backend libraries
+    - Check system audio device compatibility
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+The audio system is continuously improved with each Ryujinx release, with better compatibility and lower latency.
+</Note>

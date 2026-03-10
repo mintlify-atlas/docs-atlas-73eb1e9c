@@ -1,0 +1,514 @@
+---
+title: Graphics Enhancements
+description: Explore resolution scaling, anti-aliasing, and visual improvements beyond native Switch hardware
+icon: wand-magic-sparkles
+---
+
+Ryujinx offers several graphics enhancements that go beyond the Nintendo Switch's native capabilities, allowing you to play games at higher resolutions and with improved visual quality.
+
+## Available Enhancements
+
+Ryujinx provides six major graphics enhancement categories:
+
+<CardGroup cols={3}>
+  <Card title="Resolution Scaling" icon="expand" iconType="duotone">
+    Render games at higher resolutions for sharper visuals
+  </Card>
+  <Card title="Anti-Aliasing" icon="border-none" iconType="duotone">
+    Smooth jagged edges with FXAA and SMAA
+  </Card>
+  <Card title="Scaling Filters" icon="filter" iconType="duotone">
+    Intelligent upscaling with FSR and other filters
+  </Card>
+  <Card title="Anisotropic Filtering" icon="image" iconType="duotone">
+    Sharper textures at oblique angles
+  </Card>
+  <Card title="Aspect Ratio" icon="rectangle-wide" iconType="duotone">
+    Custom aspect ratios beyond 16:9
+  </Card>
+  <Card title="Disk Shader Cache" icon="floppy-disk" iconType="duotone">
+    Eliminate shader compilation stuttering
+  </Card>
+</CardGroup>
+
+<Info>
+All enhancements can be toggled individually in the GUI, allowing you to find the perfect balance between visual quality and performance.
+</Info>
+
+## Resolution Scaling
+
+One of the most impactful visual improvements:
+
+### How It Works
+
+```csharp
+// From GraphicsConfig.cs
+public static float ResScale { get; set; } = 1f;
+```
+
+Resolution scaling renders the game at a higher internal resolution than the Switch's native 1280x720 (handheld) or 1920x1080 (docked).
+
+### Scale Options
+
+<Tabs>
+  <Tab title="Native (1x)">
+    ### Native Resolution (1x)
+    
+    **Switch Native:**
+    - Handheld: 1280x720 (720p)
+    - Docked: 1920x1080 (1080p)
+    
+    <Note>
+    Native resolution provides the most accurate representation of how games look on real Switch hardware.
+    </Note>
+    
+    **Performance:** Fastest
+    **Visual Quality:** Original
+  </Tab>
+  
+  <Tab title="2x">
+    ### 2x Resolution
+    
+    **Render Resolution:**
+    - From 720p: 2560x1440 (1440p/2K)
+    - From 1080p: 3840x2160 (4K)
+    
+    **Performance Impact:** Moderate
+    **Visual Improvement:** Significant
+    
+    <Info>
+    2x scaling is a great balance between visual quality and performance, working well on mid-range GPUs.
+    </Info>
+  </Tab>
+  
+  <Tab title="3x-4x">
+    ### 3x-4x Resolution
+    
+    **Render Resolution:**
+    - 3x from 720p: 3840x2160 (4K)
+    - 4x from 720p: 5120x2880 (5K)
+    - 4x from 1080p: 7680x4320 (8K)
+    
+    **Performance Impact:** Heavy
+    **Visual Improvement:** Extreme
+    
+    <Warning>
+    High resolution scaling requires powerful GPUs. May cause performance issues on lower-end hardware.
+    </Warning>
+  </Tab>
+  
+  <Tab title="Custom">
+    ### Custom Scaling
+    
+    Set any scaling factor:
+    - 1.5x, 2.5x, or any decimal value
+    - Fractional scaling for fine-tuning
+    - Match your display resolution
+    
+    **Use Case:** When standard multipliers don't match your monitor or performance needs
+  </Tab>
+</Tabs>
+
+### Resolution Scaling Benefits
+
+- **Sharper Image**: Reduced pixelation and blurriness
+- **Better Details**: Small textures and UI elements appear clearer
+- **Reduced Aliasing**: Fewer jagged edges even without AA
+- **Modern Displays**: Better match for 1440p/4K monitors
+
+## Anti-Aliasing (AA)
+
+Smooths jagged edges on geometry:
+
+### Anti-Aliasing Options
+
+```csharp
+// From AntiAliasing.cs
+public enum AntiAliasing
+{
+    None,
+    Fxaa,
+    SmaaLow,
+    SmaaMedium,
+    SmaaHigh,
+    SmaaUltra,
+}
+```
+
+<Tabs>
+  <Tab title="None">
+    ### No Anti-Aliasing
+    
+    - No edge smoothing
+    - Sharpest image
+    - Visible jagged edges
+    - Best performance
+    
+    **When to use:** Maximum performance, or when using high resolution scaling (which reduces aliasing naturally)
+  </Tab>
+  
+  <Tab title="FXAA">
+    ### FXAA (Fast Approximate Anti-Aliasing)
+    
+    **Characteristics:**
+    - Very fast post-process AA
+    - Minimal performance impact
+    - Can blur the image slightly
+    - Works on all geometry
+    
+    **Performance Impact:** ~1-3%
+    
+    <Info>
+    FXAA is a good choice for lower-end GPUs that need anti-aliasing without major performance loss.
+    </Info>
+  </Tab>
+  
+  <Tab title="SMAA">
+    ### SMAA (Subpixel Morphological Anti-Aliasing)
+    
+    **Quality Levels:**
+    - **Low**: Basic edge detection and smoothing
+    - **Medium**: Improved edge quality
+    - **High**: Better subpixel handling
+    - **Ultra**: Maximum quality edge smoothing
+    
+    **Characteristics:**
+    - Better quality than FXAA
+    - Less image blur
+    - More accurate edge detection
+    - Higher performance cost
+    
+    **Performance Impact:** ~3-8% (varies by quality level)
+    
+    <Note>
+    SMAA Medium or High offers the best balance of quality and performance for most users.
+    </Note>
+  </Tab>
+</Tabs>
+
+### Anti-Aliasing Comparison
+
+| Method | Performance | Quality | Blur | Recommended For |
+|--------|-------------|---------|------|----------------|
+| **None** | Best | Worst | None | High-res scaling, weak GPUs |
+| **FXAA** | Excellent | Good | Some | Budget GPUs, 1080p |
+| **SMAA Low** | Very Good | Better | Minimal | Mid-range GPUs |
+| **SMAA Medium** | Good | Great | Minimal | Most users |
+| **SMAA High** | Fair | Excellent | None | Strong GPUs |
+| **SMAA Ultra** | Poor | Best | None | High-end GPUs |
+
+## Scaling Filters
+
+Intelligent upscaling when rendering above native resolution:
+
+### Filter Options
+
+```csharp
+// From ScalingFilter.cs
+public enum ScalingFilter
+{
+    Bilinear,
+    Nearest,
+    Fsr,
+    Area,
+}
+```
+
+<Tabs>
+  <Tab title="Bilinear">
+    ### Bilinear Filtering
+    
+    **Standard smooth scaling:**
+    - Interpolates between pixels
+    - Smooth gradients
+    - Slight blur on sharp edges
+    - Very fast
+    
+    **Best for:** General use, games with smooth art styles
+  </Tab>
+  
+  <Tab title="Nearest Neighbor">
+    ### Nearest Neighbor
+    
+    **Sharp pixel-perfect scaling:**
+    - No interpolation
+    - Preserves hard edges
+    - Can look pixelated
+    - Fastest method
+    
+    **Best for:** Pixel art games, retro-style titles, UI elements
+    
+    <Note>
+    Nearest neighbor maintains the "retro" look of pixel art games when scaling.
+    </Note>
+  </Tab>
+  
+  <Tab title="FSR">
+    ### FSR (FidelityFX Super Resolution)
+    
+    **AMD's intelligent upscaling:**
+    - Edge-aware scaling algorithm
+    - Sharpens details during upscale
+    - Better quality than bilinear
+    - Moderate performance cost
+    
+    ```csharp
+    // FSR implementation in:
+    // src/Ryujinx.Graphics.Vulkan/Effects/FsrScalingFilter.cs
+    // src/Ryujinx.Graphics.OpenGL/Effects/FsrScalingFilter.cs
+    ```
+    
+    **Characteristics:**
+    - Preserves fine details
+    - Reduces blur compared to bilinear
+    - Works on any GPU (not AMD-exclusive)
+    - Excellent for upscaling from lower resolutions
+    
+    <Info>
+    FSR is recommended when using resolution scaling, as it provides sharper results than bilinear filtering.
+    </Info>
+    
+    **Performance Impact:** ~5-10%
+  </Tab>
+  
+  <Tab title="Area">
+    ### Area Scaling
+    
+    **Area-based filtering:**
+    - Weighted average of pixel regions
+    - Good for downscaling
+    - Balanced quality
+    - Fast performance
+    
+    **Best for:** Downscaling scenarios, general purpose
+  </Tab>
+</Tabs>
+
+## Anisotropic Filtering (AF)
+
+Improves texture quality at oblique angles:
+
+### Configuration
+
+```csharp
+// From GraphicsConfig.cs
+public static float MaxAnisotropy { get; set; } = -1; // -1 = game default
+```
+
+### Anisotropy Levels
+
+| Level | Description | Performance |
+|-------|-------------|-------------|
+| **Game Default (-1)** | Uses game's original setting | None |
+| **2x** | Minimal improvement | ~1% |
+| **4x** | Noticeable improvement | ~2% |
+| **8x** | Significant improvement | ~3% |
+| **16x** | Maximum quality | ~4% |
+
+<Info>
+**Anisotropic Filtering** is highly recommended. It dramatically improves texture clarity with minimal performance cost.
+</Info>
+
+### What AF Does
+
+- **Sharper Textures**: Floor and ground textures look much clearer
+- **Distance Quality**: Far-away surfaces maintain detail
+- **Angle Correction**: Textures at steep angles don't blur
+- **Minimal Cost**: Very little performance impact even at 16x
+
+<Note>
+Set AF to 16x for best quality. The performance impact is negligible on any modern GPU.
+</Note>
+
+## Aspect Ratio Adjustment
+
+Change the display aspect ratio:
+
+### Aspect Ratio Options
+
+- **16:9** (Native Switch): Standard widescreen
+- **21:9** (Ultrawide): For ultrawide monitors
+- **32:9** (Super Ultrawide): Extreme ultrawide
+- **4:3**: Classic 4:3 ratio
+- **Custom**: Any ratio you specify
+
+<Warning>
+**Aspect Ratio Warning**: Changing aspect ratio can cause UI elements to appear stretched or positioned incorrectly. Not all games handle non-16:9 ratios gracefully.
+</Warning>
+
+### Ultrawide Benefits
+
+- **Wider FOV**: See more of the game world
+- **Immersive**: Better peripheral vision
+- **Modern Displays**: Matches 21:9/32:9 monitors
+
+### Potential Issues
+
+- UI may stretch incorrectly
+- Cutscenes may have black bars
+- Gameplay advantages in competitive games
+- Some games crop instead of extending FOV
+
+## Disk Shader Cache
+
+The most important "enhancement" for gameplay experience:
+
+<Card title="Learn More About Shader Caching" icon="floppy-disk" href="/features/gpu-emulation#disk-shader-cache">
+  Detailed information in the GPU Emulation section
+</Card>
+
+### Benefits
+
+- **Eliminates Stuttering**: No shader compilation during gameplay
+- **Instant Loading**: Pre-compiled shaders load immediately
+- **Smooth Experience**: Consistent frame rates after first run
+
+## Performance Considerations
+
+Understanding the performance impact of each enhancement:
+
+### GPU Load Comparison
+
+| Enhancement | Performance Impact | Visual Impact | Recommended |
+|-------------|-------------------|---------------|-------------|
+| **Resolution 2x** | High | Very High | Yes (mid+ GPU) |
+| **Resolution 4x** | Extreme | Extreme | Only high-end |
+| **FXAA** | Very Low | Medium | Budget GPUs |
+| **SMAA Medium** | Low | High | Most users |
+| **FSR Filter** | Low-Medium | High | Yes |
+| **16x AF** | Very Low | High | Always |
+| **Aspect Ratio** | None | Varies | Personal pref |
+
+<Info>
+Start with **2x resolution**, **SMAA Medium**, **FSR**, and **16x AF** for a great visual upgrade with reasonable performance requirements.
+</Info>
+
+## Recommended Settings
+
+<Tabs>
+  <Tab title="Budget GPU">
+    ### Budget GPU Settings
+    
+    **GPU Examples:** GTX 1050, RX 560, Integrated Graphics
+    
+    **Recommended:**
+    - Resolution: **1x (Native)**
+    - Anti-Aliasing: **FXAA** or **None**
+    - Scaling Filter: **Bilinear**
+    - Anisotropic Filtering: **8x-16x**
+    - Aspect Ratio: **16:9**
+    
+    <Note>
+    Focus on stable performance at native resolution. Enable shader cache for best experience.
+    </Note>
+  </Tab>
+  
+  <Tab title="Mid-Range GPU">
+    ### Mid-Range GPU Settings
+    
+    **GPU Examples:** GTX 1660, RTX 3060, RX 5600 XT
+    
+    **Recommended:**
+    - Resolution: **2x**
+    - Anti-Aliasing: **SMAA Medium** or **High**
+    - Scaling Filter: **FSR**
+    - Anisotropic Filtering: **16x**
+    - Aspect Ratio: **16:9** or **21:9**
+    
+    <Info>
+    Sweet spot for visual quality. Most games will run smoothly with these settings.
+    </Info>
+  </Tab>
+  
+  <Tab title="High-End GPU">
+    ### High-End GPU Settings
+    
+    **GPU Examples:** RTX 4070+, RX 7800 XT+
+    
+    **Recommended:**
+    - Resolution: **3x-4x**
+    - Anti-Aliasing: **SMAA High** or **Ultra**
+    - Scaling Filter: **FSR**
+    - Anisotropic Filtering: **16x**
+    - Aspect Ratio: **Your preference**
+    
+    <Info>
+    Maximum quality settings. Enjoy games better than physically possible on real Switch hardware.
+    </Info>
+  </Tab>
+</Tabs>
+
+## Combining Enhancements
+
+How enhancements work together:
+
+### Synergistic Effects
+
+<CardGroup cols={2}>
+  <Card title="Resolution + FSR" icon="star">
+    FSR sharpens high-resolution output for crystal-clear visuals
+  </Card>
+  <Card title="Resolution + Less AA" icon="gauge">
+    Higher resolution needs less anti-aliasing (better performance)
+  </Card>
+  <Card title="AF + Resolution" icon="image">
+    Both improve texture clarity from different angles
+  </Card>
+  <Card title="SMAA + FSR" icon="sparkles">
+    Smooth edges with sharp details
+  </Card>
+</CardGroup>
+
+### Conflicting Effects
+
+- **High AA + High Resolution**: Diminishing returns, high cost
+- **Multiple Upscale Filters**: Only use one scaling filter
+- **Extreme Settings + Weak GPU**: Will cause frame drops
+
+## Technical Implementation
+
+Key source locations:
+
+- **Graphics Config**: `src/Ryujinx.Graphics.Gpu/GraphicsConfig.cs`
+- **Enhancement Enums**: `src/Ryujinx.Common/Configuration/`
+- **FSR Shaders**: `src/Ryujinx.Graphics.*/Effects/FsrScalingFilter.cs`
+- **Scaling Filters**: `src/Ryujinx.Graphics.*/Effects/`
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Performance drops with enhancements enabled">
+    - Lower resolution scaling (try 1.5x or 2x instead of 4x)
+    - Use FXAA instead of SMAA
+    - Switch to Bilinear instead of FSR
+    - Reduce anisotropic filtering to 8x
+    - Check GPU usage and temperatures
+  </Accordion>
+  
+  <Accordion title="Blurry image despite high resolution">
+    - Enable FSR scaling filter
+    - Disable anti-aliasing (it may blur)
+    - Check display output resolution matches
+    - Verify resolution scale is actually applied
+    - Some games apply internal resolution caps
+  </Accordion>
+  
+  <Accordion title="UI stretched or broken with aspect ratio change">
+    - Reset to 16:9 aspect ratio
+    - This is a game limitation, not fixable
+    - Some games support ultrawide, others don't
+    - Check community patches for ultrawide support
+  </Accordion>
+  
+  <Accordion title="Artifacts or graphical glitches">
+    - Disable resolution scaling temporarily
+    - Try different anti-aliasing modes
+    - Switch graphics backend (Vulkan ↔ OpenGL)
+    - Update GPU drivers
+    - May be game-specific rendering issue
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+Graphics enhancements are optional quality-of-life features. If you encounter issues, you can always reset to native settings.
+</Note>

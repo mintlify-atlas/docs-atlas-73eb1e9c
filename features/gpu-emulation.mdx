@@ -1,0 +1,254 @@
+---
+title: GPU Emulation
+description: Understand how Ryujinx emulates the Nintendo Switch's Maxwell GPU architecture
+icon: display
+---
+
+Ryujinx emulates the Nintendo Switch's **NVIDIA Maxwell GPU** architecture, translating GPU commands and shaders to modern graphics APIs that run on your PC's graphics card.
+
+## Graphics API Support
+
+Ryujinx supports multiple graphics backends, allowing you to choose the best option for your system:
+
+<CardGroup cols={3}>
+  <Card title="Vulkan" icon="volcano" iconType="duotone">
+    **Recommended** - Best performance and compatibility on most systems
+  </Card>
+  <Card title="OpenGL" icon="cube" iconType="duotone">
+    Fallback option with broad hardware support (requires 4.5+)
+  </Card>
+  <Card title="Metal" icon="apple" iconType="duotone">
+    macOS support via MoltenVK translation layer
+  </Card>
+</CardGroup>
+
+<Note>
+**Vulkan** is the recommended backend for Windows and Linux systems, offering the best performance and feature support.
+</Note>
+
+## Maxwell GPU Architecture
+
+The Nintendo Switch uses NVIDIA's Maxwell GPU architecture (similar to GTX 900 series). Ryujinx emulates:
+
+### Graphics Pipeline
+
+- **3D Engine**: Full emulation of the Tegra X1's 3D graphics engine
+- **2D Engine**: Hardware-accelerated 2D operations and texture copies
+- **DMA Engine**: Direct Memory Access for efficient data transfer
+- **Compute Shaders**: Support for GPU compute operations
+
+### Rendering Features
+
+<CardGroup cols={2}>
+  <Card title="Deferred Rendering" icon="layer-group">
+    Support for modern deferred shading techniques
+  </Card>
+  <Card title="Tessellation" icon="grid">
+    Hardware tessellation for detailed geometry
+  </Card>
+  <Card title="Transform Feedback" icon="arrows-rotate">
+    GPU-side geometry processing
+  </Card>
+  <Card title="Compute Pipeline" icon="microchip">
+    General-purpose GPU computing
+  </Card>
+</CardGroup>
+
+## Shader Translation
+
+One of Ryujinx's most critical components is its shader translation system:
+
+### Shader Pipeline
+
+1. **Maxwell Shader Code** → Switch games use proprietary NVIDIA shader binaries
+2. **Intermediate Representation** → Translated to a custom IR for analysis
+3. **GLSL/SPIR-V Output** → Converted to industry-standard shader languages
+4. **Host GPU Compilation** → Your GPU driver compiles to native instructions
+
+<Info>
+Ryujinx includes sophisticated shader optimization passes that can sometimes produce better-performing code than the original game shaders.
+</Info>
+
+### Shader Types Supported
+
+| Shader Stage | Description |
+|--------------|-------------|
+| **Vertex** | Geometry processing and transformation |
+| **Tessellation Control** | Tessellation factor computation |
+| **Tessellation Evaluation** | Tessellated vertex generation |
+| **Geometry** | Primitive manipulation and generation |
+| **Fragment** | Per-pixel color and effects |
+| **Compute** | General-purpose GPU computation |
+
+### Translation Features
+
+```csharp
+// From ShaderCache.cs
+public const TranslationFlags DefaultFlags = TranslationFlags.DebugMode;
+```
+
+The shader translator supports:
+- **SSA Optimization**: Static Single Assignment form for better optimization
+- **Constant Folding**: Compile-time evaluation of constant expressions
+- **Dead Code Elimination**: Removal of unused instructions
+- **Bindless Textures**: Advanced texture access patterns
+- **Transform Optimization**: Geometry shader to compute shader conversion when beneficial
+
+## Disk Shader Cache
+
+<Card title="Disk Shader Cache" icon="floppy-disk">
+  Compiled shaders are cached to disk, eliminating stuttering on subsequent runs
+</Card>
+
+**How it works:**
+- First run: Shaders compile on-demand, may cause brief stutters
+- Cached runs: Pre-compiled shaders load instantly from disk
+- Game updates: Cache automatically invalidates when game version changes
+
+<Note>
+The shader cache is stored per-game in `[RyujinxFolder]/games/[TitleID]/cache/shader/`
+</Note>
+
+## Texture Emulation
+
+Ryujinx supports the Switch's diverse texture formats:
+
+### Texture Compression
+
+| Format | Description |
+|--------|-------------|
+| **BC1-BC7** | Desktop-standard block compression |
+| **ASTC** | Adaptive Scalable Texture Compression (Switch native) |
+| **ETC2** | Ericsson Texture Compression |
+
+<Info>
+**Texture Recompression**: When enabled, Ryujinx can recompress incompatible formats to ones your GPU supports natively, improving performance.
+</Info>
+
+### Block Linear Layout
+
+The Switch uses NVIDIA's block-linear (tiled) texture layout for optimal GPU cache usage. Ryujinx handles:
+- **Layout Conversion**: Automatic conversion between linear and block-linear formats
+- **GOB (Group of Bytes)**: NVIDIA's texture tiling unit
+- **Swizzling**: Efficient texture data reorganization
+
+## Graphics Configuration
+
+Ryujinx exposes several GPU configuration options:
+
+```csharp
+// From GraphicsConfig.cs
+public static float ResScale { get; set; } = 1f;
+public static float MaxAnisotropy { get; set; } = -1;
+public static bool EnableShaderCache { get; set; }
+public static bool FastGpuTime { get; set; } = true;
+```
+
+### Performance Options
+
+<CardGroup cols={2}>
+  <Card title="Fast GPU Time" icon="clock">
+    Simulates instant GPU processing to avoid resolution drops in performance-sensitive games
+  </Card>
+  <Card title="Fast 2D Copy" icon="copy">
+    Uses CPU for 2D texture copies when faster than GPU
+  </Card>
+  <Card title="Macro JIT" icon="bolt">
+    Just-In-Time compilation of GPU macro code
+  </Card>
+  <Card title="Macro HLE" icon="microchip">
+    High-level emulation of common GPU macros
+  </Card>
+</CardGroup>
+
+## Vulkan Backend
+
+The Vulkan backend offers the best performance:
+
+### Vulkan Advantages
+
+- **Lower CPU Overhead**: More efficient command submission
+- **Better Multi-threading**: Parallel command buffer recording
+- **Modern Features**: Latest GPU capabilities
+- **SPIR-V Support**: Native shader format, no GLSL parsing
+
+### Vulkan Extensions Used
+
+| Extension | Purpose |
+|-----------|----------|
+| **EXT_conditional_rendering** | Predicated rendering |
+| **EXT_extended_dynamic_state** | Reduced pipeline state changes |
+| **KHR_push_descriptor** | Efficient descriptor updates |
+| **EXT_transform_feedback** | Geometry shader output capture |
+| **KHR_draw_indirect_count** | GPU-driven rendering |
+
+## OpenGL Backend
+
+The OpenGL backend provides broad compatibility:
+
+### Requirements
+
+- **Minimum Version**: OpenGL 4.5
+- **Core Profile**: Modern OpenGL without legacy features
+- **Extensions**: Various extensions for optimal performance
+
+<Note>
+OpenGL 4.5 was released in 2014, so most graphics cards from the last decade support it.
+</Note>
+
+## Metal/macOS Support
+
+<Card title="Metal via MoltenVK" icon="apple">
+  macOS users can run Ryujinx through the MoltenVK translation layer, which converts Vulkan calls to Metal
+</Card>
+
+While functional, Metal/macOS support may have:
+- Slightly lower performance than native Windows/Linux
+- Some graphics quirks due to translation layer
+- Limited to Apple Silicon and Intel Macs with Metal support
+
+## Graphics Enhancements
+
+Ryujinx includes several graphical enhancements beyond native Switch capabilities:
+
+<Card title="Graphics Enhancements" icon="wand-magic-sparkles" href="/features/graphics-enhancements">
+  Explore resolution scaling, anti-aliasing, and more enhancement options
+</Card>
+
+## Technical Implementation
+
+Key source directories:
+
+- **GPU Core**: `src/Ryujinx.Graphics.Gpu/`
+- **Shader Translation**: `src/Ryujinx.Graphics.Shader/`
+- **Vulkan Backend**: `src/Ryujinx.Graphics.Vulkan/`
+- **OpenGL Backend**: `src/Ryujinx.Graphics.OpenGL/`
+- **Texture Handling**: `src/Ryujinx.Graphics.Texture/`
+
+<Info>
+The GPU emulation system handles thousands of draw calls per frame while maintaining the illusion of perfect hardware emulation.
+</Info>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Black screen or graphics not rendering">
+    - Try switching between Vulkan and OpenGL
+    - Update your GPU drivers
+    - Disable resolution scaling temporarily
+    - Check that your GPU supports the required features
+  </Accordion>
+  
+  <Accordion title="Shader compilation stuttering">
+    - This is normal on first run
+    - Let the game build its shader cache
+    - Subsequent runs will be smooth
+    - Consider pre-loading shader caches if available
+  </Accordion>
+  
+  <Accordion title="Graphics glitches or artifacts">
+    - Disable texture recompression
+    - Try the OpenGL backend if using Vulkan
+    - Report the issue with details for investigation
+  </Accordion>
+</AccordionGroup>

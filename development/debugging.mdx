@@ -1,0 +1,478 @@
+---
+title: Debugging Ryujinx
+description: Tools and techniques for debugging the Ryujinx emulator
+icon: bug
+---
+
+## Overview
+
+Effective debugging is essential for developing and troubleshooting Ryujinx. This guide covers debugging tools, techniques, and common issues developers encounter.
+
+<Note>
+Make sure you've [built Ryujinx](/development/building) in Debug configuration before following this guide.
+</Note>
+
+## Debug Build Configuration
+
+### Building for Debugging
+
+```bash
+# Build in Debug mode with symbols
+dotnet build -c Debug
+
+# Or publish with embedded debug symbols
+dotnet publish -c Debug -p:DebugType=embedded
+```
+
+### Debug vs Release
+
+| Configuration | Optimizations | Debug Symbols | Performance | Use Case |
+|--------------|---------------|---------------|-------------|----------|
+| Debug | Disabled | Full | Slower | Development, debugging |
+| Release | Enabled | Minimal | Fast | Production, testing |
+
+## IDE Debugging
+
+### Visual Studio (Windows)
+
+<Steps>
+  <Step title="Set startup project">
+    Right-click `Ryujinx` project → **Set as Startup Project**
+  </Step>
+  
+  <Step title="Set breakpoints">
+    Click in the left margin next to line numbers to add breakpoints
+  </Step>
+  
+  <Step title="Start debugging">
+    Press **F5** or select **Debug → Start Debugging**
+  </Step>
+  
+  <Step title="Debug controls">
+    - **F10**: Step Over
+    - **F11**: Step Into
+    - **Shift+F11**: Step Out
+    - **F5**: Continue
+    - **Shift+F5**: Stop Debugging
+  </Step>
+</Steps>
+
+### Visual Studio Code
+
+<Steps>
+  <Step title="Install C# Dev Kit">
+    Install the [C# Dev Kit extension](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csdevkit)
+  </Step>
+  
+  <Step title="Create launch configuration">
+    Create `.vscode/launch.json`:
+    
+    ```json
+    {
+      "version": "0.2.0",
+      "configurations": [
+        {
+          "name": "Launch Ryujinx",
+          "type": "coreclr",
+          "request": "launch",
+          "preLaunchTask": "build",
+          "program": "${workspaceFolder}/src/Ryujinx/bin/Debug/net10.0/Ryujinx.dll",
+          "args": [],
+          "cwd": "${workspaceFolder}",
+          "console": "internalConsole",
+          "stopAtEntry": false
+        }
+      ]
+    }
+    ```
+  </Step>
+  
+  <Step title="Create build task">
+    Create `.vscode/tasks.json`:
+    
+    ```json
+    {
+      "version": "2.0.0",
+      "tasks": [
+        {
+          "label": "build",
+          "command": "dotnet",
+          "type": "process",
+          "args": [
+            "build",
+            "${workspaceFolder}/Ryujinx.sln",
+            "-c",
+            "Debug"
+          ],
+          "problemMatcher": "$msCompile"
+        }
+      ]
+    }
+    ```
+  </Step>
+  
+  <Step title="Start debugging">
+    Press **F5** or select **Run → Start Debugging**
+  </Step>
+</Steps>
+
+### JetBrains Rider
+
+<Steps>
+  <Step title="Open solution">
+    Open `Ryujinx.sln`
+  </Step>
+  
+  <Step title="Set run configuration">
+    Select **Ryujinx** as the run configuration
+  </Step>
+  
+  <Step title="Set breakpoints">
+    Click in the gutter next to line numbers
+  </Step>
+  
+  <Step title="Start debugging">
+    Press **Shift+F9** or click the debug icon
+  </Step>
+</Steps>
+
+## Common Debugging Scenarios
+
+### Debugging GPU Operations
+
+GPU-related code is in `src/Ryujinx.Graphics.Gpu/`:
+
+```csharp
+// Set breakpoint in shader compilation
+// src/Ryujinx.Graphics.Gpu/Shader/ShaderCache.cs
+public void ProcessShaderCacheQueue()
+{
+    while (_programsToSaveQueue.TryPeek(out ProgramToSave programToSave))
+    {
+        // Breakpoint here to inspect shader compilation
+        ProgramLinkStatus result = programToSave.HostProgram.CheckProgramLink(false);
+    }
+}
+```
+
+### Debugging CPU Emulation
+
+CPU emulation code is in `src/ARMeilleure/`:
+
+```csharp
+// Debug ARM instruction execution
+// Set breakpoint in instruction decoder or execution
+```
+
+<Warning>
+CPU emulation debugging can be extremely slow due to the high frequency of instruction execution.
+</Warning>
+
+### Debugging HLE Services
+
+High-level emulated services are in `src/Ryujinx.HLE/`:
+
+```csharp
+// Debug service calls
+// src/Ryujinx.HLE/HOS/Services/
+// Set breakpoints in service implementations
+```
+
+## Logging
+
+### Using Ryujinx Logger
+
+Ryujinx uses a custom logging system from `Ryujinx.Common.Logging`:
+
+```csharp
+using Ryujinx.Common.Logging;
+
+// Different log levels
+Logger.Debug?.Print(LogClass.Gpu, "Debug message");
+Logger.Info?.Print(LogClass.Application, "Info message");
+Logger.Warning?.Print(LogClass.Loader, "Warning message");
+Logger.Error?.Print(LogClass.ServiceNv, "Error message");
+```
+
+### Log Classes
+
+Common log classes:
+
+| LogClass | Usage |
+|----------|-------|
+| `LogClass.Application` | Application-level messages |
+| `LogClass.Gpu` | GPU-related operations |
+| `LogClass.Loader` | Game/executable loading |
+| `LogClass.ServiceNv` | NVIDIA service emulation |
+| `LogClass.ServiceAm` | Applet manager service |
+| `LogClass.Audio` | Audio operations |
+
+### Viewing Logs
+
+<Tabs>
+  <Tab title="Console Output">
+    Debug builds output logs to the console in real-time
+  </Tab>
+  
+  <Tab title="Log Files">
+    Logs are saved to:
+    - Windows: `%AppData%/Ryujinx/Logs/`
+    - Linux: `~/.config/Ryujinx/Logs/`
+    - macOS: `~/Library/Application Support/Ryujinx/Logs/`
+    
+    Named chronologically: `Ryujinx_YYYYMMDD_HHmmss.log`
+  </Tab>
+</Tabs>
+
+## Memory Debugging
+
+### Memory Management
+
+Ryujinx has custom memory management in `src/Ryujinx.Memory/`:
+
+```csharp
+// Debug memory allocations
+using Ryujinx.Memory;
+
+// Set breakpoints in MemoryManager methods
+// to track memory operations
+```
+
+### Detecting Memory Leaks
+
+<Steps>
+  <Step title="Use .NET memory profiling">
+    Visual Studio and Rider have built-in memory profilers
+  </Step>
+  
+  <Step title="Enable GC logging">
+    ```bash
+    set DOTNET_EnableEventLog=1
+    ```
+  </Step>
+  
+  <Step title="Use diagnostic tools">
+    ```bash
+    dotnet-counters monitor --process-id <PID>
+    ```
+  </Step>
+</Steps>
+
+## Performance Profiling
+
+See the dedicated [Performance](/development/performance) guide for detailed profiling techniques.
+
+### Quick Profiling
+
+```csharp
+using System.Diagnostics;
+
+var sw = Stopwatch.StartNew();
+// Code to profile
+sw.Stop();
+Logger.Info?.Print(LogClass.Application, $"Operation took {sw.ElapsedMilliseconds}ms");
+```
+
+## Conditional Compilation
+
+### Debug-Only Code
+
+```csharp
+#if DEBUG
+Logger.Debug?.Print(LogClass.Gpu, $"Shader compiled: {shaderProgram.Name}");
+#endif
+
+// Or use Debug class (removed in Release builds)
+Debug.Assert(value != null, "Value should not be null");
+```
+
+### Platform-Specific Debugging
+
+```csharp
+#if WINDOWS
+// Windows-specific debugging
+#elif LINUX
+// Linux-specific debugging
+#elif OSX
+// macOS-specific debugging
+#endif
+```
+
+## Crash Debugging
+
+### Stack Traces
+
+When Ryujinx crashes, check:
+
+1. **Console output** for exception details
+2. **Log files** for the last operations
+3. **Crash dumps** if available
+
+### Exception Handling
+
+```csharp
+try
+{
+    // Risky operation
+}
+catch (Exception ex)
+{
+    Logger.Error?.Print(LogClass.Application, $"Operation failed: {ex.Message}");
+    Logger.Error?.Print(LogClass.Application, ex.StackTrace);
+    throw; // Re-throw if fatal
+}
+```
+
+## Common Issues
+
+<AccordionGroup>
+  <Accordion title="Breakpoints not hitting">
+    **Cause**: Running Release build or optimizations enabled
+    
+    **Fix**:
+    ```bash
+    dotnet clean
+    dotnet build -c Debug
+    ```
+  </Accordion>
+  
+  <Accordion title="Symbols not loading">
+    **Cause**: PDB files not generated or in wrong location
+    
+    **Fix**: Rebuild in Debug mode with full debug symbols:
+    ```bash
+    dotnet build -c Debug -p:DebugType=full
+    ```
+  </Accordion>
+  
+  <Accordion title="Performance too slow in Debug">
+    **Cause**: Debug builds have all optimizations disabled
+    
+    **Fix**: Use Release build for performance testing, Debug only when actively debugging
+  </Accordion>
+  
+  <Accordion title="Can't inspect variables">
+    **Cause**: Variables optimized away in Release build
+    
+    **Fix**: Switch to Debug build or use `[MethodImpl(MethodImplOptions.NoOptimization)]`
+  </Accordion>
+</AccordionGroup>
+
+## Advanced Debugging
+
+### Debugging Tests
+
+From `src/Ryujinx.Tests/`:
+
+```bash
+# Run specific test in debug mode
+dotnet test --filter "FullyQualifiedName~ShaderCacheTests.TestShaderCompilation"
+```
+
+In IDE:
+1. Right-click on test method
+2. Select **Debug Test**
+
+### Attach to Running Process
+
+<Tabs>
+  <Tab title="Visual Studio">
+    1. **Debug → Attach to Process**
+    2. Select `Ryujinx.exe` or `dotnet.exe`
+    3. Click **Attach**
+  </Tab>
+  
+  <Tab title="VS Code">
+    Add to `launch.json`:
+    ```json
+    {
+      "name": "Attach to Ryujinx",
+      "type": "coreclr",
+      "request": "attach",
+      "processId": "${command:pickProcess}"
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Command Line">
+    ```bash
+    dotnet attach <process-id>
+    ```
+  </Tab>
+</Tabs>
+
+### Remote Debugging
+
+For debugging on another machine or in Docker:
+
+```bash
+# Install remote debugger
+dotnet tool install -g vsdbg
+
+# Start with remote debugging enabled
+```
+
+## Debugging Tools
+
+### .NET Diagnostic Tools
+
+```bash
+# Install tools
+dotnet tool install -g dotnet-counters
+dotnet tool install -g dotnet-trace
+dotnet tool install -g dotnet-dump
+
+# Monitor performance counters
+dotnet-counters monitor --process-id <PID>
+
+# Collect trace
+dotnet-trace collect --process-id <PID>
+
+# Analyze crash dump
+dotnet-dump analyze <dump-file>
+```
+
+### Third-Party Tools
+
+- **[dotMemory](https://www.jetbrains.com/dotmemory/)**: Memory profiling
+- **[dotTrace](https://www.jetbrains.com/profiler/)**: Performance profiling
+- **[PerfView](https://github.com/microsoft/perfview)**: Free performance analysis
+- **[BenchmarkDotNet](https://benchmarkdotnet.org/)**: Micro-benchmarking
+
+## Tips and Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Use conditional breakpoints" icon="circle-pause">
+    Right-click breakpoint → **Conditions** to break only when specific conditions are met
+  </Card>
+  
+  <Card title="Use data breakpoints" icon="database">
+    Break when a specific variable's value changes (VS/Rider)
+  </Card>
+  
+  <Card title="Use tracepoints" icon="message">
+    Log messages without stopping execution (like adding Logger calls)
+  </Card>
+  
+  <Card title="Check the Immediate Window" icon="terminal">
+    Execute code and inspect variables at runtime (VS)
+  </Card>
+</CardGroup>
+
+<Tip>
+**Hot Reload** is supported in .NET 10.0 - make code changes while debugging without restarting!
+</Tip>
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="Testing" icon="flask" href="/development/testing">
+    Write unit tests to prevent bugs
+  </Card>
+  <Card title="Performance" icon="gauge" href="/development/performance">
+    Profile and optimize code
+  </Card>
+  <Card title="Contributing" icon="code-pull-request" href="/development/contributing">
+    Submit your fixes
+  </Card>
+</CardGroup>

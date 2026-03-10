@@ -1,0 +1,628 @@
+---
+title: 'DLC and Mods'
+description: 'Install downloadable content and apply mods to enhance your games in Ryujinx'
+icon: 'puzzle-piece'
+---
+
+Ryujinx supports both official downloadable content (DLC) and community-created modifications. This guide covers installing DLC, applying mods, and managing game modifications.
+
+## Downloadable Content (DLC)
+
+Ryujinx can manage add-on content and DLC packages through the GUI:
+
+### DLC File Formats
+
+<CardGroup cols={2}>
+  <Card title="NSP Files" icon="file-archive">
+    **Standard DLC Format**
+    
+    - Most common DLC format
+    - Can contain multiple DLC packages
+    - Easy to install via GUI
+  </Card>
+  
+  <Card title="XCI Bundled" icon="compact-disc">
+    **Cartridge Dumps with DLC**
+    
+    - DLC bundled with game cartridge
+    - Automatically detected
+    - Cannot be disabled separately
+  </Card>
+</CardGroup>
+
+### Installing DLC
+
+<Steps>
+  <Step title="Access DLC Manager">
+    Right-click a game in the library and select:
+    
+    **Manage Downloadable Content**
+    
+    This opens the DLC Manager window for that specific game.
+  </Step>
+  
+  <Step title="Add DLC Files">
+    In the DLC Manager:
+    
+    1. Click the **+** (Add) button
+    2. Browse to your DLC NSP file(s)
+    3. Select one or multiple DLC packages
+    4. Click **Open**
+    
+    <Note>
+    Only DLC matching the game's Title ID will be shown and can be added.
+    </Note>
+  </Step>
+  
+  <Step title="Enable/Disable DLC">
+    Each DLC entry has a checkbox:
+    
+    - ☑ **Enabled** - DLC is active and loaded
+    - ☐ **Disabled** - DLC is installed but not loaded
+    
+    Toggle checkboxes to enable or disable specific DLC packages.
+  </Step>
+  
+  <Step title="Save Configuration">
+    Click **Save** to apply your DLC configuration
+    
+    <Warning>
+    You must restart the game for DLC changes to take effect.
+    </Warning>
+  </Step>
+</Steps>
+
+### DLC Information Display
+
+The DLC Manager shows details for each package:
+
+```plaintext
+Title ID: 0100ABCD12345001
+Container: dlc_pack1.nsp
+Type: NSP / Bundled (XCI)
+```
+
+- **Title ID:** Unique identifier (base game ID + DLC suffix)
+- **Container Path:** Location of the DLC file
+- **Bundled Notice:** XCI files with bundled DLC show a warning
+
+### Autoload Directories for DLC
+
+Automatically detect and load DLC from specified folders:
+
+<Steps>
+  <Step title="Configure Autoload Directories">
+    Navigate to **Settings > UI > Autoload Directories**
+  </Step>
+  
+  <Step title="Add DLC Folders">
+    Click **Add** and select folders containing:
+    - DLC NSP files
+    - Game updates
+    - Additional content
+  </Step>
+  
+  <Step title="Refresh Library">
+    Ryujinx scans autoload directories when you:
+    - Refresh the game library
+    - Restart the application
+    - Load a game
+  </Step>
+</Steps>
+
+<Note>
+DLC from autoload directories is automatically matched to the appropriate games based on Title ID.
+</Note>
+
+### Managing DLC
+
+<Accordion title="Enable All DLC">
+  Click **Enable All** button to activate all installed DLC packages at once.
+</Accordion>
+
+<Accordion title="Disable All DLC">
+  Click **Disable All** button to deactivate all DLC while keeping them installed.
+</Accordion>
+
+<Accordion title="Remove DLC">
+  To remove DLC from the list:
+  1. Uncheck the DLC package
+  2. Click the **-** (Remove) button
+  3. Select the DLC to remove
+  4. Confirm removal
+  
+  <Note>
+  Removing DLC from the manager doesn't delete the NSP file from disk - it only removes the reference.
+  </Note>
+</Accordion>
+
+<Accordion title="Bundled DLC (XCI)">
+  If your game was loaded from an XCI file containing DLC:
+  
+  - Bundled DLC appears in the manager
+  - Cannot be disabled individually
+  - Shows a notice: "This DLC is bundled with the game"
+  - Removing the game removes bundled DLC
+</Accordion>
+
+## Game Modifications (Mods)
+
+Ryujinx supports three types of mods:
+
+<CardGroup cols={3}>
+  <Card title="RomFS Mods" icon="folder">
+    **File Replacement Mods**
+    
+    Replace game files like textures, models, and audio.
+  </Card>
+  
+  <Card title="ExeFS Mods" icon="code">
+    **Executable Patches**
+    
+    Modify game code and executables.
+  </Card>
+  
+  <Card title="Cheats" icon="wand-magic-sparkles">
+    **Runtime Modifications**
+    
+    In-memory code modifications and cheat codes.
+  </Card>
+</CardGroup>
+
+### Mod Directory Structure
+
+Mods are organized in two locations:
+
+<Tabs>
+  <Tab title="Global Mods Directory">
+    **Location:**
+    ```plaintext
+    <RyujinxFolder>/mods/contents/<TitleID>/
+    ```
+    
+    **Structure:**
+    ```plaintext
+    mods/
+    └── contents/
+        └── 0100ABCD12345000/
+            ├── My Texture Mod/
+            │   └── romfs/
+            │       └── ... (mod files)
+            └── Code Patch/
+                └── exefs/
+                    └── ... (patch files)
+    ```
+  </Tab>
+  
+  <Tab title="SD Card Mods (Atmosphere)">
+    **Location:**
+    ```plaintext
+    <RyujinxFolder>/sdcard/atmosphere/contents/<TitleID>/
+    ```
+    
+    **Structure:**
+    ```plaintext
+    sdcard/
+    └── atmosphere/
+        └── contents/
+            └── 0100ABCD12345000/
+                ├── romfs/
+                ├── exefs/
+                └── cheats/
+    ```
+    
+    <Note>
+    The SD card location mimics Nintendo Switch's Atmosphere CFW structure for compatibility with existing mods.
+    </Note>
+  </Tab>
+</Tabs>
+
+### Installing RomFS Mods
+
+RomFS mods replace game files:
+
+<Steps>
+  <Step title="Get Mod Files">
+    Download your desired mod (usually as a .zip file)
+  </Step>
+  
+  <Step title="Access Mod Manager">
+    Right-click a game in the library and select:
+    
+    **Manage Mods**
+  </Step>
+  
+  <Step title="Add Mod via GUI">
+    1. Click the **Add** button
+    2. Select the mod folder (containing romfs/ or exefs/)
+    3. The mod is automatically installed
+    
+    <Note>
+    Mods must contain either a `romfs/` or `exefs/` folder to be recognized.
+    </Note>
+  </Step>
+  
+  <Step title="Manual Installation">
+    Alternatively, manually copy mods:
+    
+    1. Right-click game > **Open Mods Directory**
+    2. Create a folder for your mod
+    3. Extract mod contents maintaining structure:
+       ```plaintext
+       ModName/
+       └── romfs/
+           └── ... (replacement files)
+       ```
+    4. Refresh the mod manager
+  </Step>
+  
+  <Step title="Enable the Mod">
+    In Mod Manager:
+    - Check the box next to the mod name to enable
+    - Uncheck to disable without removing
+    - Enabled mods are applied on game launch
+  </Step>
+</Steps>
+
+### Installing ExeFS Mods
+
+ExeFS mods patch game executables:
+
+<Steps>
+  <Step title="Prepare ExeFS Mod">
+    Ensure mod structure:
+    ```plaintext
+    ModName/
+    └── exefs/
+        ├── main (executable patch)
+        └── ... (other patches)
+    ```
+  </Step>
+  
+  <Step title="Install via Mod Manager">
+    Same process as RomFS mods:
+    1. Open Mod Manager for the game
+    2. Click **Add** and select mod folder
+    3. Enable the mod
+  </Step>
+  
+  <Step title="Verify Compatibility">
+    <Warning>
+    ExeFS mods are game version-specific. Ensure the mod matches your game's version.
+    </Warning>
+  </Step>
+</Steps>
+
+### Installing Cheats
+
+Cheats are runtime code modifications:
+
+<Steps>
+  <Step title="Locate Cheat Files">
+    Cheats are `.txt` files containing cheat codes:
+    ```plaintext
+    [Infinite Health]
+    580F0000 12345678
+    780F0000 00000100
+    640F0000 00000000 000003E7
+    ```
+  </Step>
+  
+  <Step title="Install Cheats">
+    **Manual Installation:**
+    
+    1. Navigate to mod directory:
+       ```plaintext
+       <RyujinxFolder>/sdcard/atmosphere/contents/<TitleID>/cheats/
+       ```
+    2. Create `cheats/` folder if it doesn't exist
+    3. Place `.txt` cheat files in this folder
+    4. Name format: `<BuildID>.txt` or use any name
+  </Step>
+  
+  <Step title="Enable Cheats">
+    Cheats appear in the Mod Manager:
+    - Check to enable specific cheats
+    - Multiple cheat files can be active
+    - Changes apply on game restart
+  </Step>
+</Steps>
+
+<Note>
+Cheats use Atmosphere cheat format. Build ID is the first 16 hex characters of the game's build ID.
+</Note>
+
+### Managing Mods
+
+<Accordion title="Enable/Disable Mods">
+  In the Mod Manager:
+  
+  - **Enable All** - Activates all installed mods
+  - **Disable All** - Deactivates all mods without removing them
+  - **Individual Toggle** - Check/uncheck specific mods
+  
+  Mod states are saved in:
+  ```plaintext
+  <RyujinxFolder>/games/<TitleID>/mods.json
+  ```
+</Accordion>
+
+<Accordion title="Remove Mods">
+  To delete a mod:
+  
+  1. Select the mod in Mod Manager
+  2. Click **Delete** button
+  3. Confirm deletion
+  
+  <Warning>
+  Deleting a mod permanently removes it from disk. Make backups if needed.
+  </Warning>
+</Accordion>
+
+<Accordion title="Delete All Mods">
+  **Delete All** button removes all mods for the current game.
+  
+  This is useful for troubleshooting or starting fresh.
+</Accordion>
+
+<Accordion title="Search Mods">
+  Use the search box in Mod Manager to filter mods by name:
+  
+  - Type to filter visible mods
+  - Useful when managing many mods
+  - Search is case-insensitive
+</Accordion>
+
+### Mod Containers
+
+Mods can also be packaged as containers:
+
+<Tabs>
+  <Tab title="romfs.bin">
+    Single-file RomFS replacement:
+    
+    ```plaintext
+    ModName/
+    └── romfs.bin
+    ```
+    
+    Ryujinx loads this as the complete RomFS replacement.
+  </Tab>
+  
+  <Tab title="exefs.nsp">
+    Packaged ExeFS mod:
+    
+    ```plaintext
+    ModName/
+    └── exefs.nsp
+    ```
+    
+    Contains executable patches in NSP format.
+  </Tab>
+</Tabs>
+
+## Mod Compatibility
+
+### Game Version Matching
+
+<Warning>
+Mods, especially ExeFS patches and cheats, are often version-specific:
+
+- Check mod requirements
+- Verify game version matches mod version
+- Update mods when updating games
+- Disable incompatible mods to prevent crashes
+</Warning>
+
+### Multi-DLC Mods
+
+Some mods require specific DLC:
+
+<Steps>
+  <Step title="Check Mod Requirements">
+    Read mod documentation for DLC dependencies
+  </Step>
+  
+  <Step title="Install Required DLC">
+    Ensure all required DLC is installed and enabled
+  </Step>
+  
+  <Step title="Enable Mod">
+    Only enable the mod after DLC is active
+  </Step>
+</Steps>
+
+### Mod Load Order
+
+Mods are loaded in the order they appear in `mods.json`:
+
+- Later mods can override earlier ones
+- Important for texture/model replacement priority
+- Reorder by editing `mods.json` manually if needed
+
+## Advanced Modding
+
+### Atmosphere-Style Mods
+
+Ryujinx supports Atmosphere CFW mod structure:
+
+```plaintext
+sdcard/atmosphere/
+├── contents/
+│   └── <TitleID>/
+│       ├── romfs/
+│       ├── exefs/
+│       └── cheats/
+├── exefs_patches/
+│   └── <PatchName>/
+├── nro_patches/
+└── kip_patches/
+```
+
+This allows using mods designed for Switch CFW directly in Ryujinx.
+
+### Stubbing Files
+
+Create `.stub` files to remove game files:
+
+```plaintext
+ModName/
+└── romfs/
+    └── Movie/
+        └── intro.mp4.stub
+```
+
+The `.stub` extension tells Ryujinx to exclude that file, effectively removing intro videos or unwanted content.
+
+### Mod Metadata
+
+Mods can include metadata for better organization:
+
+**mods.json format:**
+```json
+{
+  "Mods": [
+    {
+      "Name": "HD Texture Pack",
+      "Path": "/path/to/mod",
+      "Enabled": true
+    }
+  ]
+}
+```
+
+## Troubleshooting Mods and DLC
+
+<Accordion title="DLC not appearing in game">
+  **Solutions:**
+  
+  1. Verify DLC is enabled in DLC Manager
+  2. Ensure DLC Title ID matches game (base ID + DLC suffix)
+  3. Restart the game after enabling DLC
+  4. Check DLC compatibility with game version
+  5. Verify DLC NSP file is not corrupted
+</Accordion>
+
+<Accordion title="Mod not working">
+  **Common causes:**
+  - Mod is disabled in Mod Manager
+  - Incorrect folder structure (missing romfs/ or exefs/)
+  - Game version mismatch
+  - Conflicting mods
+  
+  **Solutions:**
+  1. Verify mod is enabled (checked in Mod Manager)
+  2. Check folder structure matches requirements
+  3. Ensure game version matches mod requirements
+  4. Disable other mods to test for conflicts
+  5. Check mod documentation for installation steps
+</Accordion>
+
+<Accordion title="Game crashes with mods enabled">
+  **Debugging steps:**
+  
+  1. **Disable all mods:**
+     - Use "Disable All" in Mod Manager
+     - Test if game runs without mods
+  
+  2. **Enable mods one by one:**
+     - Identify which mod causes the crash
+     - Remove or update problematic mod
+  
+  3. **Check mod compatibility:**
+     - Verify game version
+     - Check for mod conflicts
+     - Read mod documentation
+  
+  4. **Review logs:**
+     - Check `<RyujinxFolder>/Logs/` for error messages
+     - Look for mod-related errors
+</Accordion>
+
+<Accordion title="Cannot add DLC - 'No DLC found'">
+  **This error means:**
+  
+  The NSP file either:
+  - Contains no DLC (it's a game or update)
+  - Contains DLC for a different game
+  
+  **Solutions:**
+  1. Verify the NSP is actually DLC (not base game/update)
+  2. Check Title ID matches your game
+  3. Ensure NSP file is not corrupted
+  4. Try a different DLC package
+</Accordion>
+
+<Accordion title="Mod directory not found">
+  **If 'Open Mods Directory' doesn't work:**
+  
+  1. Manually create the directory:
+     ```plaintext
+     <RyujinxFolder>/sdcard/atmosphere/contents/<TitleID>/
+     ```
+  2. Refresh the Mod Manager
+  3. Restart Ryujinx if needed
+</Accordion>
+
+<Accordion title="Cheats not working">
+  **Solutions:**
+  
+  1. Ensure cheat file name matches Build ID
+  2. Verify cheat codes are in Atmosphere format
+  3. Enable cheats in Mod Manager
+  4. Restart game after enabling cheats
+  5. Check if game version matches cheat version
+  6. Test with known-working cheats to verify functionality
+</Accordion>
+
+## Best Practices
+
+<Steps>
+  <Step title="Backup Saves Before Modding">
+    Always backup your save data before installing mods:
+    
+    Save location:
+    ```plaintext
+    <RyujinxFolder>/games/<TitleID>/save/
+    ```
+  </Step>
+  
+  <Step title="Document Your Mods">
+    Keep track of:
+    - Installed mods and versions
+    - Game versions they work with
+    - Load order if applicable
+    - Source/download location
+  </Step>
+  
+  <Step title="Test Mods Individually">
+    When installing multiple mods:
+    - Add and test one mod at a time
+    - Ensure each works before adding more
+    - Easier to identify conflicts
+  </Step>
+  
+  <Step title="Keep Mods Updated">
+    Update mods when:
+    - Game receives updates
+    - Mod creator releases new version
+    - Experiencing compatibility issues
+  </Step>
+</Steps>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Game Loading" icon="gamepad" href="/user-guide/game-loading">
+    Learn how to load and manage games
+  </Card>
+  <Card title="Configuration" icon="gear" href="/user-guide/configuration">
+    Configure system and emulator settings
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/user-guide/troubleshooting">
+    Diagnose and fix common issues
+  </Card>
+  <Card title="Graphics Settings" icon="display" href="/user-guide/graphics-settings">
+    Optimize visual quality and performance
+  </Card>
+</CardGroup>

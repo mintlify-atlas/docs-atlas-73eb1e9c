@@ -1,0 +1,272 @@
+---
+title: Contributing to Ryujinx
+description: Learn how to contribute to the Ryujinx emulator project
+icon: code-pull-request
+---
+
+## Welcome Contributors
+
+Ryujinx welcomes contributions through pull requests, testing, and issue reporting. This guide will help you become an effective contributor to the project.
+
+<Note>
+Before contributing, please read this entire guide to save time for both you and the maintainers.
+</Note>
+
+## Quick Reference
+
+<CardGroup cols={2}>
+  <Card title="Code Style Guide" icon="paintbrush" href="/development/coding-style">
+    Follow Ryujinx's C# coding conventions
+  </Card>
+  <Card title="Pull Request Guide" icon="git-pull-request" href="/development/pr-guide">
+    Understand the PR review process
+  </Card>
+</CardGroup>
+
+## Reporting Issues
+
+Effective bug reports and feature requests help maintainers prioritize and fix issues faster.
+
+### Finding Existing Issues
+
+<Steps>
+  <Step title="Search first">
+    Check the [open issues](https://github.com/Ryubing/Ryujinx/issues) to avoid duplicates
+  </Step>
+  <Step title="Add your feedback">
+    If you find an existing issue, contribute your own experience to the discussion
+  </Step>
+  <Step title="Upvote issues">
+    Use the 👍 reaction on the original post to help prioritize popular issues
+  </Step>
+</Steps>
+
+### Writing a Good Bug Report
+
+A quality bug report should include:
+
+<AccordionGroup>
+  <Accordion title="High-level description">
+    Clearly explain what the problem is
+  </Accordion>
+  
+  <Accordion title="Minimal reproduction">
+    Provide the smallest configuration needed to reproduce the issue:
+    - A small homebrew application
+    - Save file and reproduction steps for a specific game
+    - Exact steps to trigger the bug
+  </Accordion>
+  
+  <Accordion title="Expected vs actual behavior">
+    Describe what you expected to happen versus what actually occurred
+  </Accordion>
+  
+  <Accordion title="Environment information">
+    Include system details:
+    - OS/distribution
+    - CPU model
+    - GPU model and driver version
+    - RAM capacity
+  </Accordion>
+  
+  <Accordion title="Ryujinx log file">
+    Attach the log file from when the issue occurred:
+    - Found in `[Executable Folder]/Logs`
+    - Named chronologically
+  </Accordion>
+  
+  <Accordion title="Additional context">
+    - Is this a regression from previous versions?
+    - Are there any known workarounds?
+    - Any other relevant information
+  </Accordion>
+</AccordionGroup>
+
+<Warning>
+Use the [Bug Report issue template](https://github.com/Ryubing/Ryujinx/issues/new?assignees=&labels=bug&projects=&template=bug_report.yml&title=%5BBug%5D) when submitting bug reports.
+</Warning>
+
+### Writing a Good Feature Request
+
+Before submitting a feature request:
+
+1. Review existing feature requests for duplicates
+2. Familiarize yourself with the expected format
+3. Use the [Feature Request issue template](https://github.com/Ryubing/Ryujinx/issues/new?assignees=&labels=&projects=&template=feature_request.yml&title=%5BFeature+Request%5D)
+
+## Contributing Code
+
+Maintainers merge changes that improve the project and meet quality standards.
+
+### DOs and DON'Ts
+
+<CardGroup cols={2}>
+  <Card title="DO" icon="check" color="#00ff00">
+    - Follow the [coding style](docs/coding-guidelines/coding-style.md)
+    - Prioritize the existing style of files you're modifying
+    - Keep discussions focused; create new issues for tangential topics
+    - Clearly state when you're taking on an issue
+    - Share your contributions on social media
+  </Card>
+  
+  <Card title="DON'T" icon="xmark" color="#ff0000">
+    - Submit PRs for style changes alone
+    - Surprise maintainers with large PRs (discuss first on Discord)
+    - Commit code you didn't write without discussion
+    - Modify licensing-related files or headers
+  </Card>
+</CardGroup>
+
+## Suggested Workflow
+
+<Steps>
+  <Step title="Create or find an issue">
+    - Skip this for trivial changes
+    - Get agreement from the team for significant changes
+    - State that you're implementing it and request assignment
+  </Step>
+  
+  <Step title="Fork the repository">
+    Create a personal fork on GitHub if you don't have one
+  </Step>
+  
+  <Step title="Create a branch">
+    ```bash
+    git checkout -b mybranch
+    ```
+    Branches isolate your changes and enable multiple PRs from one fork
+  </Step>
+  
+  <Step title="Make and commit changes">
+    - Follow [build instructions](https://github.com/Ryubing/Ryujinx/blob/master/COMPILING.md)
+    - Write clear, actionable commit messages
+  </Step>
+  
+  <Step title="Build with your changes">
+    ```bash
+    dotnet build -c Release
+    ```
+    Ensure clean builds with no errors
+  </Step>
+  
+  <Step title="Run dotnet format">
+    ```bash
+    dotnet format
+    ```
+    Test and commit any formatting corrections
+  </Step>
+  
+  <Step title="Create a pull request">
+    - Target the **main** branch
+    - State what issue or improvement you're addressing
+    - Check that all [CI checks](https://github.com/Ryubing/Ryujinx/actions) pass
+  </Step>
+  
+  <Step title="Wait for review">
+    See the [pull request guide](docs/workflow/pr-guide.md) for review details
+  </Step>
+  
+  <Step title="Merge and celebrate">
+    Once approved and all checks pass, your PR will be merged. Your change will be in the next official build!
+  </Step>
+</Steps>
+
+## Good First Issues
+
+New to the codebase? Start with [good first issues](https://github.com/Ryubing/Ryujinx/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22) - these are straightforward tasks perfect for new contributors.
+
+## Commit Message Format
+
+Follow this format based on [A Note About Git Commit Messages](http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html):
+
+```
+Summarize change in 50 characters or less
+
+Provide more detail after the first line. Leave one blank line below the
+summary and wrap all lines at 72 characters or less.
+
+If the change fixes an issue, leave another blank line after the final
+paragraph and indicate which issue is fixed in the specific format
+below.
+
+Fix #42
+```
+
+<Note>
+Factor commits appropriately - not too large with unrelated changes, and not too small with the same change applied multiple times.
+</Note>
+
+## CI Process
+
+The [continuous integration system](https://github.com/Ryubing/Ryujinx/actions) automatically builds and tests all PRs.
+
+### Common CI Failures
+
+<Accordion title="dotnet format not run">
+  Run `dotnet format` locally and commit the changes
+</Accordion>
+
+<Accordion title="Compilation error">
+  Fix the compiler error in your PR
+</Accordion>
+
+<Accordion title="Test failure">
+  Investigate the test failure in your changes
+</Accordion>
+
+<Accordion title="Random workflow failure">
+  A maintainer will manually restart the job
+</Accordion>
+
+## PR Feedback Process
+
+Both team members and community members provide valuable feedback on pull requests.
+
+<Note>
+Two Ryujinx team members must review and approve every PR before merge.
+</Note>
+
+### Understanding Review Comments
+
+- **"LGTM, see nit"** - The PR will be merged once minor feedback is addressed
+- **"LGTM"** - "Looks good to me" - approval granted
+
+<Tip>
+Be patient with reviewers who may need clarification on your approach. Clear, explicit feedback works best.
+</Tip>
+
+## Copying Code from Other Projects
+
+When including code from other projects, follow these rules:
+
+<Steps>
+  <Step title="Verify the license">
+    The file must have a [permissive license](https://en.wikipedia.org/wiki/Permissive_free_software_licence)
+  </Step>
+  
+  <Step title="Keep the license intact">
+    Leave the original license text in the file
+  </Step>
+  
+  <Step title="Update third-party notices">
+    Add proper attribution to [THIRDPARTY.md](https://github.com/Ryubing/Ryujinx/blob/master/distribution/legal/THIRDPARTY.md)
+  </Step>
+</Steps>
+
+<Warning>
+Do not copy code without following these requirements. If unsure, file an issue or discuss on Discord first.
+</Warning>
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="Build Ryujinx" icon="hammer" href="/development/building">
+    Set up your development environment
+  </Card>
+  <Card title="Coding Style" icon="code" href="/development/coding-style">
+    Learn the C# conventions
+  </Card>
+  <Card title="Testing" icon="flask" href="/development/testing">
+    Write and run tests
+  </Card>
+</CardGroup>

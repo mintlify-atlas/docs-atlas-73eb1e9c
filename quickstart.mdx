@@ -1,80 +1,373 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quick Start
+description: Get up and running with Ryujinx - from first launch to playing your first game
 ---
 
-## Get started in three steps
+# Quick Start Guide
 
-Get your documentation site running locally and make your first customization.
+This guide will walk you through the initial setup of Ryujinx and help you load your first game.
 
-### Step 1: Set up your local environment
+<Info>
+Before proceeding, make sure you have [installed Ryujinx](/installation) and your system meets the [minimum requirements](/system-requirements).
+</Info>
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
+## First Launch Setup
+
+<Steps>
+  <Step title="Launch Ryujinx">
+    Start Ryujinx for the first time:
     
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
+    - **Windows**: Double-click `Ryujinx.exe`
+    - **macOS**: Open `Ryujinx.app` from Applications
+    - **Linux**: Run `./Ryujinx` from the installation directory
     
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 2: Deploy your changes
-
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
+    On first launch, Ryujinx will automatically create necessary configuration folders and files.
+  </Step>
+  
+  <Step title="Install Nintendo Switch Firmware (Required)">
+    Ryujinx requires Nintendo Switch firmware files to function properly.
     
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+    <Warning>
+    You must legally obtain firmware files from your own Nintendo Switch console. Ryujinx does not provide these files.
+    </Warning>
+    
+    To install firmware:
+    
+    1. Click **Tools > Install Firmware** in the menu bar
+    2. Select **Install from File**
+    3. Browse to your firmware `.zip` file
+    4. Click **Open** and wait for installation to complete
+    
+    <Note>
+    Firmware files are typically in a format like `Firmware 18.0.0.zip`. The version number should match or exceed the version required by your games.
+    </Note>
+  </Step>
+  
+  <Step title="Install Production Keys (Required)">
+    Production keys are required to decrypt game files.
+    
+    <Warning>
+    You must legally obtain `prod.keys` from your own Nintendo Switch console. Ryujinx does not provide these keys.
+    </Warning>
+    
+    To install keys:
+    
+    1. Click **File > Open Ryujinx Folder**
+    2. Navigate to the `system` subfolder
+    3. Place your `prod.keys` file in this folder
+    4. Restart Ryujinx
+    
+    The file structure should look like:
+    ```
+    Ryujinx/
+    └── system/
+        └── prod.keys
+    ```
+  </Step>
+  
+  <Step title="Set Game Directory">
+    Tell Ryujinx where your games are located:
+    
+    1. Click **Options > Settings** (or **Ryujinx > Preferences** on macOS)
+    2. Go to the **UI** tab
+    3. Under **Game Directories**, click **Add**
+    4. Browse to the folder containing your game files
+    5. Click **Select Folder**
+    6. Click **Save**
+    
+    <Info>
+    You can add multiple game directories. Ryujinx will scan all of them for compatible games.
+    </Info>
+  </Step>
+</Steps>
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+## Loading Your First Game
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+<Steps>
+  <Step title="Verify Game Appears in Library">
+    After setting your game directory, Ryujinx will automatically scan for games.
+    
+    Compatible game formats:
+    - `.nsp` - Nintendo Submission Package
+    - `.xci` - NX Card Image
+    - `.nca` - Nintendo Content Archive
+    - `.nro` - Homebrew applications
+    
+    Games should appear in the main window with their title, icon, and metadata.
+    
+    <Note>
+    If games don't appear, try clicking **File > Refresh** or verify that your game files are in a supported format.
+    </Note>
+  </Step>
+  
+  <Step title="Launch a Game">
+    To start playing:
+    
+    1. **Double-click** the game in the library, or
+    2. **Right-click** the game and select **Start**, or
+    3. **Select** the game and press **Enter**
+    
+    The game window will open and begin loading.
+    
+    <Info>
+    **First Launch Performance:** The first time you launch a game, you may experience shader compilation stutters and longer load times. This is normal and will improve significantly on subsequent launches, especially with PPTC (Profiled Persistent Translation Cache) enabled.
+    </Info>
+  </Step>
+  
+  <Step title="Configure Controls (Optional)">
+    Before or during gameplay, you may want to configure your input device:
+    
+    1. Click **Options > Settings**
+    2. Go to the **Input** tab
+    3. Select your **Player 1** device from the dropdown
+    4. Click **Configure** to map buttons
+    
+    <Tabs>
+      <Tab title="Keyboard">
+        Default keyboard controls:
+        - **WASD** or **Arrow Keys**: Left stick
+        - **IJKL**: Right stick  
+        - **Q/E**: L/R triggers
+        - **Z/C**: ZL/ZR
+        - **Enter**: Plus (+)
+        - **Backspace**: Minus (-)
+        - **Space**: A button
+        - **Tab**: B button
+        
+        You can customize all of these in the Input settings.
+      </Tab>
+      
+      <Tab title="Controller">
+        Ryujinx supports most modern controllers:
+        - Xbox controllers (360, One, Series X/S)
+        - PlayStation controllers (DualShock 4, DualSense)
+        - Nintendo Switch Pro Controller
+        - Joy-Cons (via Bluetooth)
+        - Generic DirectInput/XInput controllers
+        
+        Most controllers work with default mappings, but you can customize them in Input settings.
+      </Tab>
+    </Tabs>
+  </Step>
+</Steps>
 
-### Step 3: Go live
+## Essential Settings for Best Performance
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+Optimize Ryujinx for your first gaming session:
 
-## Next steps
+<Steps>
+  <Step title="Enable PPTC (Recommended)">
+    PPTC significantly reduces load times after the first few launches.
+    
+    1. Click **Options > Settings**
+    2. Go to the **System** tab
+    3. Ensure **Enable Profiled Persistent Translation Cache** is checked
+    4. Click **Save**
+    
+    <Info>
+    **How PPTC works:** You must launch a game at least **twice** to the title screen before performance improvements activate on the **third launch**. After that, improvements are permanent.
+    </Info>
+  </Step>
+  
+  <Step title="Select Graphics Backend">
+    Choose the best graphics API for your system:
+    
+    1. **Options > Settings > Graphics**
+    2. Select **Graphics Backend**:
+       - **Vulkan**: Best performance on most systems (recommended)
+       - **OpenGL**: Good compatibility, slightly lower performance
+       - **Metal**: macOS only (via MoltenVK)
+    3. Click **Save** and restart Ryujinx
+    
+    <Note>
+    Try Vulkan first. If you experience issues, switch to OpenGL.
+    </Note>
+  </Step>
+  
+  <Step title="Adjust Memory Manager Mode">
+    For best performance:
+    
+    1. **Options > Settings > System**
+    2. **Memory Manager Mode**: Set to **Host unchecked** (default)
+    
+    <Info>
+    **Host unchecked** is the fastest option and works well on most systems. Only change this if you experience crashes or stability issues.
+    </Info>
+  </Step>
+  
+  <Step title="Configure Graphics Enhancements (Optional)">
+    Enhance visual quality on powerful systems:
+    
+    1. **Options > Settings > Graphics**
+    2. Adjust these settings based on your GPU:
+    
+    **Resolution Scale:**
+    - **1x**: Native Switch resolution (720p/1080p)
+    - **2x-4x**: Higher resolutions for sharper image
+    
+    **Other Enhancements:**
+    - **Aspect Ratio**: Change from 16:9 to other ratios
+    - **Anti-Aliasing**: Smooth jagged edges (FXAA, SMAA)
+    - **Scaling Filter**: Use FSR for better upscaling
+    - **Anisotropic Filtering**: Improve texture quality (Auto/2x-16x)
+    
+    <Warning>
+    Higher settings require more powerful hardware. Start conservative and increase gradually while monitoring performance.
+    </Warning>
+  </Step>
+</Steps>
 
-Now that you have your docs running, explore these key features:
+## Managing Game Data
+
+### Installing Updates and DLC
+
+<Steps>
+  <Step title="Right-Click Game in Library">
+    Select the game you want to manage
+  </Step>
+  
+  <Step title="Choose Management Option">
+    - **Manage Title Updates**: Install game updates (`.nsp` files)
+    - **Manage DLC**: Install downloadable content (`.nsp` files)
+  </Step>
+  
+  <Step title="Add Content">
+    1. Click **Add** in the dialog
+    2. Browse to your update or DLC `.nsp` file
+    3. Click **Open**
+    4. The content will be installed and activated automatically
+  </Step>
+</Steps>
+
+### Installing Mods
+
+Ryujinx supports various mod types:
+
+<Steps>
+  <Step title="Open Mods Folder">
+    1. Right-click the game in the library
+    2. Select **Open Mods Directory**
+    
+    This opens the game-specific mods folder.
+  </Step>
+  
+  <Step title="Install Mods">
+    Place mod files in this folder:
+    
+    - **RomFS mods**: Extract to `romfs/` subfolder
+    - **ExeFS mods**: Extract to `exefs/` subfolder
+    - **Cheats**: Place `.txt` cheat files in `cheats/` subfolder
+    
+    Example structure:
+    ```
+    mods/
+    ├── romfs/
+    │   └── [mod files]
+    ├── exefs/
+    │   └── [patch files]
+    └── cheats/
+        └── [cheat files]
+    ```
+  </Step>
+  
+  <Step title="Enable Mods">
+    Mods are automatically loaded when you launch the game. Some games may require you to enable specific mods through in-game options.
+  </Step>
+</Steps>
+
+## In-Game Controls
+
+While a game is running, use these shortcuts:
 
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="F11" icon="expand">
+    Toggle fullscreen mode
+  </Card>
+  <Card title="F8" icon="camera">
+    Take screenshot (saved to screenshots folder)
+  </Card>
+  <Card title="Pause/Break" icon="pause">
+    Pause emulation
+  </Card>
+  <Card title="F4" icon="keyboard">
+    Toggle between docked/handheld mode
+  </Card>
 </CardGroup>
 
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>
+## Troubleshooting Common Issues
+
+<AccordionGroup>
+  <Accordion title="Game doesn't appear in library">
+    **Solutions:**
+    - Click **File > Refresh** to rescan directories
+    - Verify game file format is supported (`.nsp`, `.xci`, `.nca`, `.nro`)
+    - Check that the game directory is correctly added in **Options > Settings > UI**
+    - Ensure the file isn't corrupted
+  </Accordion>
+  
+  <Accordion title="Game crashes on launch">
+    **Solutions:**
+    - Verify firmware version matches or exceeds game requirements
+    - Check that `prod.keys` is correctly installed
+    - Try different Memory Manager mode (System settings)
+    - Check logs in **File > Open Logs Folder** for error details
+    - Ensure you have at least 8GB RAM available
+  </Accordion>
+  
+  <Accordion title="Poor performance / low FPS">
+    **Solutions:**
+    - Launch the game 2-3 times to build PPTC cache
+    - Switch to Vulkan graphics backend
+    - Lower resolution scale to 1x or 2x
+    - Disable graphics enhancements
+    - Close background applications
+    - Ensure Memory Manager Mode is set to "Host unchecked"
+    - Check your system meets [minimum requirements](/system-requirements)
+  </Accordion>
+  
+  <Accordion title="Shader compilation stutters">
+    **This is normal behavior:**
+    - Games compile shaders during gameplay on first run
+    - Stuttering decreases significantly after playing for a while
+    - Enable disk shader caching (on by default) to persist compiled shaders
+    - Subsequent playthroughs will be much smoother
+  </Accordion>
+  
+  <Accordion title="Controls not working">
+    **Solutions:**
+    - Verify controller is connected and recognized by your OS
+    - Go to **Options > Settings > Input** and configure Player 1
+    - Click **Configure** and test button mappings
+    - For Joy-Cons, ensure they're properly paired via Bluetooth
+    - Try switching between different controller types in the dropdown
+  </Accordion>
+</AccordionGroup>
+
+## Viewing Logs
+
+If you encounter issues, logs are essential for troubleshooting:
+
+1. Click **File > Open Logs Folder**
+2. Log files are named chronologically
+3. Open the most recent log with a text editor
+4. Look for errors or warnings (typically marked with `[ERROR]` or `[WARN]`)
+
+<Info>
+When reporting bugs, always include the relevant log file. This helps developers diagnose the issue.
+</Info>
+
+## Next Steps
+
+Now that you're up and running:
+
+<CardGroup cols={3}>
+  <Card title="Configuration" icon="sliders" href="/configuration">
+    Deep dive into all settings and optimizations
+  </Card>
+  <Card title="Graphics Settings" icon="palette" href="/graphics">
+    Learn about resolution scaling, filters, and enhancements
+  </Card>
+  <Card title="Multiplayer" icon="users" href="/multiplayer">
+    Set up local wireless and LAN multiplayer
+  </Card>
+</CardGroup>

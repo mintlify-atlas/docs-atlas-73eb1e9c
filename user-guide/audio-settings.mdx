@@ -1,0 +1,510 @@
+---
+title: 'Audio Settings'
+description: 'Configure audio backend, output, and volume in Ryujinx'
+icon: 'volume'
+---
+
+Ryujinx provides full audio output emulation for Nintendo Switch games. This guide covers audio backend selection, volume control, and troubleshooting common audio issues.
+
+## Audio Support
+
+Ryujinx audio features:
+
+<CardGroup cols={2}>
+  <Card title="Audio Output" icon="volume-high">
+    **Fully Supported**
+    
+    Complete audio output emulation with multiple backend options.
+  </Card>
+  
+  <Card title="Audio Input" icon="microphone">
+    **Not Supported**
+    
+    Microphone input is not currently implemented.
+  </Card>
+</CardGroup>
+
+## Audio Backend Selection
+
+Ryujinx supports three audio backends with automatic fallback support:
+
+<Tabs>
+  <Tab title="SDL3">
+    **Default and Recommended**
+    
+    **Advantages:**
+    - Best cross-platform compatibility
+    - Modern and actively maintained
+    - Low latency
+    - Wide hardware support
+    
+    **Platform Support:**
+    - Windows
+    - Linux
+    - macOS
+    
+    ```json
+    "AudioBackend": "SDL3"
+    ```
+  </Tab>
+  
+  <Tab title="OpenAL">
+    **Alternative backend**
+    
+    **Advantages:**
+    - Mature and stable
+    - Good compatibility
+    - Supports 3D audio positioning
+    
+    **Platform Support:**
+    - Windows (via OpenAL Soft)
+    - Linux (native)
+    - macOS (native)
+    
+    **When to use:**
+    - SDL3 has issues on your system
+    - Better audio quality in specific scenarios
+    - Legacy system compatibility
+    
+    ```json
+    "AudioBackend": "OpenAL"
+    ```
+    
+    <Note>
+    On Windows, Ryujinx includes OpenAL Soft binaries. Linux and macOS use system-provided OpenAL.
+    </Note>
+  </Tab>
+  
+  <Tab title="libsoundio">
+    **Fallback backend**
+    
+    **Advantages:**
+    - Low-level audio control
+    - Direct hardware access
+    - Minimal overhead
+    
+    **Platform Support:**
+    - Windows
+    - Linux
+    - macOS
+    
+    **When to use:**
+    - Both SDL3 and OpenAL fail
+    - Debugging audio issues
+    - Specific hardware requirements
+    
+    ```json
+    "AudioBackend": "SoundIo"
+    ```
+  </Tab>
+</Tabs>
+
+### Changing Audio Backend
+
+<Steps>
+  <Step title="Open Audio Settings">
+    Navigate to **File > Settings > Audio**
+  </Step>
+  
+  <Step title="Select Backend">
+    Choose from available backends:
+    
+    - **SDL3** (recommended)
+    - **OpenAL** (if available on your platform)
+    - **libsoundio** (if available)
+    
+    <Note>
+    Backend availability is detected automatically. Unsupported backends will be greyed out.
+    </Note>
+  </Step>
+  
+  <Step title="Apply Changes">
+    Click **Save** to apply the new audio backend
+    
+    <Warning>
+    Audio backend changes may require restarting the currently running game for full effect.
+    </Warning>
+  </Step>
+</Steps>
+
+## Volume Control
+
+Adjust audio output volume:
+
+### Global Volume
+
+Set the master audio volume for Ryujinx:
+
+```json
+"AudioVolume": 1.0
+```
+
+<Steps>
+  <Step title="Access Volume Control">
+    In **Settings > Audio**, find the **Volume** slider
+  </Step>
+  
+  <Step title="Adjust Volume">
+    Move the slider to set volume:
+    
+    - **0%** - Muted
+    - **50%** - Half volume
+    - **100%** - Full volume (default)
+    
+    The volume value is stored as a decimal (0.0 - 1.0) in the config file.
+  </Step>
+  
+  <Step title="Real-time Adjustment">
+    Volume changes apply immediately without restarting the game
+  </Step>
+</Steps>
+
+### Hotkey Volume Control
+
+Adjust volume quickly during gameplay:
+
+<Accordion title="Configure Volume Hotkeys">
+  By default, volume hotkeys are unbound. To configure:
+  
+  1. Navigate to **Settings > Hotkeys**
+  2. Find **Volume Up** and **Volume Down**
+  3. Click and press your desired key
+  4. Save settings
+  
+  **Example configuration:**
+  ```json
+  "VolumeUp": "PageUp",
+  "VolumeDown": "PageDown"
+  ```
+</Accordion>
+
+### Mute Toggle
+
+Quickly mute/unmute audio:
+
+- **Default Hotkey:** F2
+- **Configurable:** Settings > Hotkeys > Toggle Mute
+
+```json
+"ToggleMute": "F2"
+```
+
+## Audio Configuration Details
+
+### OpenAL Configuration (Windows)
+
+Ryujinx includes an `alsoft.ini` configuration file for OpenAL Soft on Windows:
+
+**Location:**
+```plaintext
+<RyujinxInstallDirectory>/alsoft.ini
+```
+
+**Default Settings:**
+- Sample rate: 48000 Hz (native Switch sample rate)
+- Channels: Stereo output
+- Latency: Optimized for gaming
+
+<Note>
+Advanced users can modify `alsoft.ini` to adjust OpenAL behavior, but this is rarely necessary.
+</Note>
+
+### Audio Sample Rate
+
+The Nintendo Switch uses a 48000 Hz sample rate. Ryujinx matches this automatically:
+
+- **Sample Rate:** 48000 Hz
+- **Channels:** 2 (stereo)
+- **Bit Depth:** 16-bit
+
+No manual configuration is required.
+
+## Audio Backend Availability
+
+Ryujinx automatically detects which audio backends are available:
+
+<Tabs>
+  <Tab title="Windows">
+    **Available Backends:**
+    - ✅ SDL3 (default)
+    - ✅ OpenAL (bundled with Ryujinx)
+    - ✅ libsoundio
+    
+    All three backends are fully supported on Windows.
+  </Tab>
+  
+  <Tab title="Linux">
+    **Available Backends:**
+    - ✅ SDL3 (default)
+    - ✅ OpenAL (system-provided)
+    - ✅ libsoundio
+    
+    OpenAL availability depends on system installation.
+  </Tab>
+  
+  <Tab title="macOS">
+    **Available Backends:**
+    - ✅ SDL3 (default)
+    - ✅ OpenAL (system-provided)
+    - ✅ libsoundio
+    
+    macOS includes OpenAL by default.
+  </Tab>
+</Tabs>
+
+## Audio Performance Optimization
+
+### Reducing Audio Latency
+
+For the lowest possible audio latency:
+
+<Steps>
+  <Step title="Use SDL3 Backend">
+    SDL3 provides the lowest latency in most scenarios
+  </Step>
+  
+  <Step title="Disable Audio Enhancements">
+    **Windows:**
+    1. Right-click speaker icon > Sounds
+    2. Playback tab > Select your device > Properties
+    3. Enhancements tab > Disable all enhancements
+    
+    **macOS:**
+    System audio settings generally don't require changes
+    
+    **Linux:**
+    - Use ALSA directly if possible
+    - Minimize PulseAudio/PipeWire buffering
+  </Step>
+  
+  <Step title="Close Other Audio Applications">
+    Exclusive audio applications can interfere with Ryujinx's audio output
+  </Step>
+</Steps>
+
+### Audio Stuttering Solutions
+
+If experiencing audio crackling or stuttering:
+
+<Accordion title="Try Different Backend">
+  Switch audio backends to find the most stable:
+  
+  1. SDL3 (try first)
+  2. OpenAL (if SDL3 stutters)
+  3. libsoundio (if both above have issues)
+</Accordion>
+
+<Accordion title="Adjust System Audio Buffer">
+  **Windows:**
+  - Increase audio buffer size in sound settings
+  - Update audio drivers
+  
+  **Linux:**
+  - Adjust PulseAudio/PipeWire buffer settings
+  - Check for xruns with audio monitoring tools
+  
+  **macOS:**
+  - Check Activity Monitor for audio-related processes
+  - Reduce system audio sample rate if necessary
+</Accordion>
+
+<Accordion title="Check CPU Usage">
+  Audio stuttering often indicates CPU bottleneck:
+  
+  - Close background applications
+  - Lower graphics settings
+  - Disable unnecessary system services
+  - Monitor CPU usage during gameplay
+</Accordion>
+
+## Troubleshooting Audio Issues
+
+<Accordion title="No audio output">
+  **Solutions:**
+  
+  1. **Check volume settings:**
+     - Ensure Ryujinx volume is not at 0%
+     - Check system volume is not muted
+     - Verify correct audio output device is selected
+  
+  2. **Try different audio backend:**
+     - Switch from SDL3 to OpenAL
+     - Test with libsoundio
+  
+  3. **Verify audio device:**
+     - Check Windows Sound settings
+     - Test audio in other applications
+     - Restart audio service
+  
+  4. **Check logs:**
+     - Look for audio initialization errors
+     - Location: `<RyujinxFolder>/Logs/`
+  
+  5. **Restart Ryujinx:**
+     - Close completely and relaunch
+     - Some audio issues require full restart
+</Accordion>
+
+<Accordion title="Audio crackling or popping">
+  **Common causes:**
+  - Insufficient CPU performance
+  - Audio buffer underruns
+  - Driver issues
+  - Background applications
+  
+  **Solutions:**
+  1. Switch to OpenAL backend
+  2. Increase system audio buffer size
+  3. Update audio drivers
+  4. Close background applications
+  5. Lower graphics settings to reduce CPU load
+  6. Disable audio enhancements in system settings
+</Accordion>
+
+<Accordion title="Audio desync (out of sync with video)">
+  **Solutions:**
+  
+  1. **Enable VSync:**
+     - Ensure VSync is set to "Switch" mode
+     - Disable "Unbounded" VSync mode
+  
+  2. **Check frame pacing:**
+     - If FPS is unstable, audio may desync
+     - Lock to 60 FPS for best audio sync
+  
+  3. **Try different audio backend:**
+     - Some backends have better timing than others
+  
+  4. **Restart the game:**
+     - Audio sync usually stabilizes after game restart
+</Accordion>
+
+<Accordion title="Audio too quiet or too loud">
+  **Solutions:**
+  
+  1. **Adjust Ryujinx volume:**
+     - Settings > Audio > Volume slider
+     - Set to comfortable level (default is 100%)
+  
+  2. **Check system volume:**
+     - Windows: Volume mixer
+     - macOS: System Preferences > Sound
+     - Linux: System volume controls
+  
+  3. **In-game audio settings:**
+     - Some games have independent volume controls
+     - Check game options/settings menu
+  
+  4. **Audio normalization:**
+     - Consider enabling system audio enhancements
+     - Use external audio software if needed
+</Accordion>
+
+<Accordion title="Audio backend unavailable">
+  **If a backend shows as unavailable:**
+  
+  **For OpenAL:**
+  - Windows: Reinstall Ryujinx (includes OpenAL Soft)
+  - Linux: Install `libopenal1` or `openal-soft`
+  - macOS: OpenAL is built-in
+  
+  **For SDL3:**
+  - Update to latest Ryujinx version
+  - Check if SDL3 library is present
+  
+  **For libsoundio:**
+  - Update Ryujinx to latest version
+  - Check system audio framework is working
+</Accordion>
+
+<Accordion title="Audio cuts out during gameplay">
+  **Possible causes:**
+  - Audio buffer underrun
+  - CPU spike or throttling
+  - Audio driver crash
+  
+  **Solutions:**
+  1. Monitor CPU usage during cutouts
+  2. Update audio drivers
+  3. Switch audio backend
+  4. Check for thermal throttling
+  5. Close background audio applications
+  6. Increase system audio buffer size
+</Accordion>
+
+## Platform-Specific Audio Notes
+
+### Windows Audio
+
+- **Recommended:** SDL3 or OpenAL
+- **Driver Updates:** Use Windows Update or GPU manufacturer's audio drivers
+- **Exclusive Mode:** Disable in Windows sound settings for best compatibility
+
+### Linux Audio
+
+- **Recommended:** SDL3
+- **PulseAudio/PipeWire:** Both work well, prefer PipeWire for lower latency
+- **ALSA:** Direct ALSA may provide better latency but less compatibility
+
+**Install OpenAL (if needed):**
+```bash
+# Debian/Ubuntu
+sudo apt install libopenal1
+
+# Fedora
+sudo dnf install openal-soft
+
+# Arch
+sudo pacman -S openal
+```
+
+### macOS Audio
+
+- **Recommended:** SDL3
+- **Core Audio:** macOS's Core Audio provides excellent compatibility
+- **Logs Location:** `~/Library/Logs/Ryujinx/` for audio debug info
+
+## Advanced Audio Configuration
+
+### Audio Logging
+
+Enable audio-related logging for debugging:
+
+```json
+"LoggingEnableDebug": true,
+"LoggingEnableTrace": false
+```
+
+<Warning>
+Verbose logging can impact performance. Only enable when troubleshooting specific audio issues.
+</Warning>
+
+### Audio Focus Behavior
+
+Control audio when Ryujinx loses focus:
+
+```json
+"FocusLostActionType": "DoNothing"
+```
+
+Options:
+- **DoNothing** - Audio continues playing
+- **PauseEmulation** - Pauses game and audio
+- **MuteAudio** - Mutes audio but continues emulation
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Graphics Settings" icon="display" href="/user-guide/graphics-settings">
+    Configure graphics backend and visual enhancements
+  </Card>
+  <Card title="Configuration" icon="gear" href="/user-guide/configuration">
+    Adjust system and emulator settings
+  </Card>
+  <Card title="Input Configuration" icon="gamepad" href="/user-guide/input-configuration">
+    Set up controllers and keyboard input
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/user-guide/troubleshooting">
+    Diagnose and fix common issues
+  </Card>
+</CardGroup>

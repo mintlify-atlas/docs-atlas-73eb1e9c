@@ -1,97 +1,125 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "Ryujinx"
+description: "An open-source Nintendo Switch emulator written in C# with high accuracy and performance"
 ---
 
-## Setting up
+<div style={{
+  background: 'linear-gradient(135deg, #0a0e1a 0%, #242b2c 100%)',
+  padding: '60px 40px',
+  borderRadius: '12px',
+  marginBottom: '40px',
+  border: '1px solid rgba(106, 90, 205, 0.3)',
+  boxShadow: '0 0 40px 10px rgba(106, 90, 205, 0.2)'
+}}>
+  <h1 style={{
+    fontSize: '48px',
+    fontWeight: '700',
+    color: '#ffffff',
+    marginBottom: '20px',
+    textAlign: 'center'
+  }}>
+    Welcome to Ryujinx
+  </h1>
+  <p style={{
+    fontSize: '20px',
+    color: '#ffffff',
+    textAlign: 'center',
+    maxWidth: '800px',
+    margin: '0 auto',
+    lineHeight: '1.6'
+  }}>
+    A high-accuracy Nintendo Switch emulator featuring ARMv8 CPU emulation, Maxwell GPU support, and comprehensive HLE implementation. Built from scratch in C# for excellent performance and user experience.
+  </p>
+</div>
 
-Get your documentation site up and running in minutes.
+## Get Started
 
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
+Begin your journey with Ryujinx in just a few steps.
 
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/installation">
+    Download and install Ryujinx on Windows, macOS, or Linux
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Quick Start" icon="rocket" href="/quickstart">
+    Load your first game and configure the emulator
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="System Requirements" icon="computer" href="/system-requirements">
+    Check if your PC meets the requirements
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="Configuration" icon="gear" href="/user-guide/configuration">
+    Optimize settings for the best experience
   </Card>
-</Columns>
+</CardGroup>
 
-## Create beautiful pages
+## Key Features
 
-Everything you need to create world-class documentation.
+Ryujinx delivers exceptional emulation accuracy and performance through advanced technology.
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
+<CardGroup cols={2}>
+  <Card title="ARMv8 CPU Emulation" icon="microchip" href="/features/cpu-emulation">
+    JIT compiler with support for 64-bit ARMv8 and 32-bit ARM instructions
   </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
+  <Card title="Maxwell GPU" icon="display" href="/features/gpu-emulation">
+    OpenGL, Vulkan, and Metal backends with full shader translation
   </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
+  <Card title="Graphics Enhancements" icon="wand-magic-sparkles" href="/features/graphics-enhancements">
+    Resolution scaling, FXAA, FSR upscaling, and anisotropic filtering
   </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
+  <Card title="Persistent Translation Cache" icon="bolt" href="/features/ptc">
+    Dramatically reduced load times with profiled code caching
   </Card>
-</Columns>
+  <Card title="Full Controller Support" icon="gamepad" href="/features/input-support">
+    Keyboard, mouse, Joy-Con, and motion control support
+  </Card>
+  <Card title="Mods & DLC" icon="puzzle-piece" href="/user-guide/dlc-and-mods">
+    Manage add-on content and apply runtime modifications
+  </Card>
+</CardGroup>
 
-## Need inspiration?
+## Architecture
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+Explore the technical implementation behind Ryujinx.
+
+<CardGroup cols={3}>
+  <Card title="ARMeilleure" icon="brain" href="/architecture/armeilleure">
+    CPU emulator with custom IR and JIT compilation
+  </Card>
+  <Card title="High-Level Emulation" icon="layer-group" href="/architecture/hle">
+    Nintendo Switch OS service implementation
+  </Card>
+  <Card title="Graphics Pipeline" icon="paintbrush" href="/architecture/graphics-subsystem">
+    GPU command processing and rendering backends
+  </Card>
+  <Card title="Memory Management" icon="memory" href="/architecture/memory-management">
+    Software and host-mapped memory modes
+  </Card>
+  <Card title="Audio System" icon="volume-high" href="/architecture/audio-subsystem">
+    Multiple backend support for audio output
+  </Card>
+  <Card title="Input Handling" icon="hand-pointer" href="/architecture/input-system">
+    Controller mapping and motion control processing
+  </Card>
+</CardGroup>
+
+## Contributing
+
+Join the development of Ryujinx and help improve Nintendo Switch emulation.
+
+<CardGroup cols={2}>
+  <Card title="Contribution Guide" icon="handshake" href="/development/contributing">
+    Learn how to contribute code and improvements
+  </Card>
+  <Card title="Building from Source" icon="hammer" href="/development/building">
+    Compile Ryujinx yourself for development
+  </Card>
+  <Card title="Coding Style" icon="code" href="/development/coding-style">
+    Follow our C# coding standards
+  </Card>
+  <Card title="Pull Request Guide" icon="code-pull-request" href="/development/pr-guide">
+    Submit your changes for review
+  </Card>
+</CardGroup>
+
+<Note>
+  **Project Status**: This is a community fork of Ryujinx, maintained as a QoL uplift for existing users. The original project was discontinued on October 1st, 2024.
+</Note>

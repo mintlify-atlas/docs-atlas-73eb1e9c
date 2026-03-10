@@ -1,0 +1,463 @@
+---
+title: Pull Request Guide
+description: Comprehensive guide to creating and reviewing pull requests for Ryujinx
+icon: git-pull-request
+---
+
+## Overview
+
+All contributions to Ryujinx are made via pull requests rather than direct commits. PRs are reviewed and merged by maintainers after approval from at least two core team members.
+
+<Note>
+To merge pull requests, you must have write permissions in the repository.
+</Note>
+
+## Quick Code Review Rules
+
+<CardGroup cols={2}>
+  <Card title="DO" icon="check" color="#00ff00">
+    - Follow existing code style
+    - Keep changes focused and related
+    - Use Draft PRs for early feedback
+    - Rebase when requested
+    - Make review changes as new commits
+  </Card>
+  
+  <Card title="DON'T" icon="xmark" color="#ff0000">
+    - Mix unrelated changes
+    - Add unjustified dependencies
+    - Resolve conversations prematurely
+    - Force-push during review
+  </Card>
+</CardGroup>
+
+## Code Review Rules in Detail
+
+### Keep Changes Focused
+
+<Warning>
+**Do not mix unrelated changes in one pull request**. For example, a code style change should never be mixed with a bug fix.
+</Warning>
+
+```diff Good PR - Single focused change
++ Fixed null reference in shader cache
++ Added null check before accessing cache entry
++ Added test for null cache scenario
+```
+
+```diff Bad PR - Mixed unrelated changes
++ Fixed null reference in shader cache
++ Reformatted entire Graphics.Gpu namespace
++ Updated copyright headers
++ Added new texture compression feature
+```
+
+### Follow Code Style
+
+All changes must follow the existing code style. Read more at [docs/coding-style](../coding-guidelines/coding-style.md).
+
+<Tip>
+Run `dotnet format` before committing to automatically fix style issues.
+</Tip>
+
+### Avoid External Dependencies
+
+<Warning>
+Adding external dependencies should be avoided unless not doing so would introduce **significant** complexity.
+</Warning>
+
+Any dependency addition must be:
+1. Justified with clear reasoning
+2. Discussed with maintainers before merge
+3. Properly licensed and attributed
+
+### Draft Pull Requests
+
+Use [Draft PRs](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/changing-the-stage-of-a-pull-request) for:
+- Work in progress that needs early CI feedback
+- Changes you want to discuss before formal review
+- Experimental implementations
+
+<Steps>
+  <Step title="Create Draft PR">
+    Select "Create draft pull request" instead of "Create pull request"
+  </Step>
+  
+  <Step title="Get CI feedback">
+    CI runs automatically on draft PRs
+  </Step>
+  
+  <Step title="Mark ready for review">
+    Click "Ready for review" when your PR is complete
+  </Step>
+</Steps>
+
+### Rebasing Changes
+
+**Rebase your changes when required or directly requested.** Changes should always be committed on top of the upstream branch.
+
+```bash
+# Update your branch with latest main
+git fetch origin
+git rebase origin/main
+
+# Force push your rebased branch
+git push --force-with-lease
+```
+
+<Note>
+Use `--force-with-lease` instead of `--force` to avoid accidentally overwriting others' work.
+</Note>
+
+### Making Review Changes
+
+If asked to make changes during review:
+
+<Steps>
+  <Step title="Make changes as new commits">
+    Don't amend or rebase while under review
+    ```bash
+    git add .
+    git commit -m "Address review feedback"
+    git push
+    ```
+  </Step>
+  
+  <Step title="Don't resolve conversations">
+    Only resolve GitHub conversations after:
+    - Addressing them with a commit, OR
+    - Reaching mutual agreement with the reviewer
+  </Step>
+</Steps>
+
+## Pull Request Ownership
+
+### Automatic Assignment
+
+Every pull request automatically receives:
+- **Labels** indicating which code segment is affected
+- **Reviewers** assigned based on the area being modified
+
+### Merge Conflict Resolution
+
+If a merge conflict occurs during review, the PR author is responsible for resolution.
+
+<Tabs>
+  <Tab title="Using Git (Recommended)">
+    ```bash
+    # Update your local main branch
+    git checkout main
+    git pull origin main
+    
+    # Go back to your branch and rebase
+    git checkout your-branch
+    git rebase main
+    
+    # Resolve conflicts in your editor
+    # Then continue the rebase
+    git add .
+    git rebase --continue
+    
+    # Push the resolved branch
+    git push --force-with-lease
+    ```
+  </Tab>
+  
+  <Tab title="Using GitHub Web UI">
+    GitHub provides a [conflict editor](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/resolving-a-merge-conflict-on-github) for simple conflicts:
+    
+    1. Click "Resolve conflicts" button
+    2. Edit the file to resolve markers
+    3. Click "Mark as resolved"
+    4. Commit the merge
+  </Tab>
+</Tabs>
+
+## Pull Request Builds
+
+When you submit a PR, various CI workflows validate your changes.
+
+### CI Workflows
+
+From `.github/workflows/build.yml`:
+
+<AccordionGroup>
+  <Accordion title="Build Job">
+    Compiles Ryujinx for all platforms:
+    - Windows (x64, ARM64)
+    - Linux (x64, ARM64)
+    - macOS (x64, Universal)
+    
+    Configuration: Debug and Release
+  </Accordion>
+  
+  <Accordion title="Test Job">
+    Runs all unit tests:
+    ```bash
+    dotnet test --no-build -c Release
+    ```
+    
+    Skipped for `linux-arm64` due to emulation
+  </Accordion>
+  
+  <Accordion title="Format Check">
+    Validates code style:
+    ```bash
+    dotnet format --verify-no-changes
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Viewing Build Results
+
+<Steps>
+  <Step title="Navigate to Actions tab">
+    Go to [Actions tab](https://github.com/Ryubing/Ryujinx/actions) in your PR
+  </Step>
+  
+  <Step title="Check workflow status">
+    All workflows must show green checkmarks
+  </Step>
+  
+  <Step title="Download artifacts">
+    If builds complete successfully, artifacts are uploaded and posted as a comment
+  </Step>
+</Steps>
+
+### Common CI Failures
+
+<AccordionGroup>
+  <Accordion title="Code style violations">
+    **Error**: `dotnet format` found style issues
+    
+    **Fix**:
+    ```bash
+    dotnet format
+    git add .
+    git commit -m "Fix code style"
+    git push
+    ```
+  </Accordion>
+  
+  <Accordion title="Compilation errors">
+    **Error**: Build failed with compiler errors
+    
+    **Fix**: Review the build log in Actions tab, fix the errors locally, test with `dotnet build`, then push
+  </Accordion>
+  
+  <Accordion title="Test failures">
+    **Error**: Unit tests failed
+    
+    **Fix**: Run tests locally:
+    ```bash
+    dotnet test
+    ```
+    Fix failing tests and push changes
+  </Accordion>
+  
+  <Accordion title="Platform-specific failures">
+    **Error**: Build succeeds locally but fails in CI for specific platform
+    
+    **Fix**: Check for platform-specific code paths. Use conditional compilation if needed:
+    ```csharp
+    #if WINDOWS
+    // Windows-specific code
+    #elif LINUX
+    // Linux-specific code
+    #endif
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Review Turnaround Times
+
+Ryujinx is maintained by volunteers on a free-time basis.
+
+<Warning>
+We cannot guarantee specific timeframes for PR reviews. Weeks to months are common for larger (>500 line) PRs.
+</Warning>
+
+### Best Practices to Avoid Review Purgatory
+
+<Steps>
+  <Step title="Make reviewers' lives easier">
+    - Use descriptive commit messages
+    - Add code comments for complex logic
+    - Include XML docs where applicable
+  </Step>
+  
+  <Step title="Defer to the team">
+    If there's disagreement on feedback, lean toward the development team's opinion
+  </Step>
+  
+  <Step title="Follow up if needed">
+    If there's been radio silence for a substantial period:
+    - Comment "bump" on the PR
+    - Reach out directly on Discord
+  </Step>
+</Steps>
+
+### Example PR Description
+
+```markdown
+## Summary
+Fixes shader cache null reference exception when loading certain games.
+
+## Changes
+- Added null check in `ShaderCache.GetProgram()` at line 234
+- Added unit test `ShaderCacheTests.GetProgram_WithNullEntry_ReturnsNull()`
+- Updated error logging to provide more context
+
+## Testing
+- Tested with The Legend of Zelda: Breath of the Wild
+- Tested with Super Mario Odyssey
+- All existing tests pass
+
+Fixes #1234
+```
+
+## Merging Pull Requests
+
+Anyone with write access can merge a PR when:
+
+<Steps>
+  <Step title="Two approvals received">
+    The PR has been approved by **two reviewers** from the core team
+  </Step>
+  
+  <Step title="All objections addressed">
+    Any requested changes have been resolved
+  </Step>
+  
+  <Step title="CI passes">
+    All tests and builds succeed in [CI](https://github.com/Ryubing/Ryujinx/actions)
+  </Step>
+</Steps>
+
+### Follow-Up Reviews
+
+<Tip>
+If reviewers requested changes, you can request follow-up reviews from the original reviewers after addressing their feedback.
+</Tip>
+
+### Merge Strategy
+
+Typically, PRs are merged as **one commit (squash merge)**. This creates a cleaner history than merge commits.
+
+<Tabs>
+  <Tab title="Squash Merge (Default)">
+    All commits in the PR are squashed into a single commit on main.
+    
+    **Use for**: Most PRs with multiple small commits
+  </Tab>
+  
+  <Tab title="Merge Commit (Special Cases)">
+    Preserves individual commits from the PR.
+    
+    **Use for**: Series of cleanly separated changes that are hard to understand if squashed
+  </Tab>
+</Tabs>
+
+## Blocking PR Merging
+
+If you need to prevent your PR from being merged:
+
+<Tabs>
+  <Tab title="Convert to Draft">
+    Select **"Convert to draft"** under the reviewers section
+  </Tab>
+  
+  <Tab title="Add [WIP] prefix">
+    Add `[WIP]` to the PR title:
+    ```
+    [WIP] Fix shader cache null reference
+    ```
+  </Tab>
+</Tabs>
+
+## Old Pull Request Policy
+
+The team periodically reviews older PRs for relevance.
+
+<Note>
+Inactive or outdated PRs may be closed. As the PR owner, you can reopen if you feel it still needs attention.
+</Note>
+
+## PR Checklist
+
+Before submitting your PR, ensure:
+
+- [ ] Code follows the [coding style guidelines](/development/coding-style)
+- [ ] `dotnet format` has been run
+- [ ] All tests pass locally (`dotnet test`)
+- [ ] New tests added for new functionality
+- [ ] PR description clearly explains the changes
+- [ ] Related issue is linked (if applicable)
+- [ ] No unrelated changes included
+- [ ] Commits have clear, descriptive messages
+- [ ] No new external dependencies without justification
+- [ ] Breaking changes are clearly documented
+
+## Review Response Examples
+
+### Requesting Clarification
+
+```markdown
+Thanks for the review! Could you clarify what you mean by "refactor this logic"?
+Do you want me to extract it into a separate method, or change the algorithm?
+```
+
+### Agreeing with Feedback
+
+```markdown
+Good catch! I've addressed this in commit abc1234.
+```
+
+### Respectfully Disagreeing
+
+```markdown
+I understand your concern about performance. However, I believe this approach is
+more maintainable because [reasons]. The performance difference is negligible
+based on my benchmarks [attach results].
+
+Happy to discuss alternative approaches if you still have concerns.
+```
+
+## Working with Multiple Reviewers
+
+When receiving conflicting feedback:
+
+<Steps>
+  <Step title="Acknowledge both perspectives">
+    ```markdown
+    @reviewer1 and @reviewer2 have different opinions on this approach.
+    ```
+  </Step>
+  
+  <Step title="Present the trade-offs">
+    ```markdown
+    Approach A: [pros and cons]
+    Approach B: [pros and cons]
+    ```
+  </Step>
+  
+  <Step title="Ask for consensus">
+    ```markdown
+    Could you both discuss and let me know which direction to take?
+    ```
+  </Step>
+</Steps>
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="Contributing Guide" icon="book" href="/development/contributing">
+    Full contribution guidelines
+  </Card>
+  <Card title="Coding Style" icon="paintbrush" href="/development/coding-style">
+    Learn code conventions
+  </Card>
+  <Card title="Testing" icon="flask" href="/development/testing">
+    Write and run tests
+  </Card>
+</CardGroup>

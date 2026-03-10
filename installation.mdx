@@ -1,0 +1,326 @@
+---
+title: Installation
+description: Step-by-step guide to installing Ryujinx on Windows, macOS, and Linux
+---
+
+# Installation Guide
+
+Ryujinx is available as pre-built binaries for Windows, macOS, and Linux. You can also build from source if you prefer.
+
+<Warning>
+Before installing, ensure your system meets the [minimum requirements](/system-requirements), especially the 8GB RAM requirement.
+</Warning>
+
+## Choose Your Build Type
+
+Ryujinx offers two release channels:
+
+<CardGroup cols={2}>
+  <Card title="Stable Builds" icon="shield-check">
+    **Recommended for most users**
+    
+    Released monthly based on the `master` branch. These builds provide a more enjoyable and stable experience with consistent, tested updates.
+    
+    [Download Stable](https://git.ryujinx.app/ryubing/ryujinx/-/releases)
+  </Card>
+  <Card title="Canary Builds" icon="flask">
+    **For experienced users**
+    
+    Compiled automatically for each commit on the `master` branch. May be unstable or completely broken. Only recommended for testing and development.
+    
+    [Download Canary](https://git.ryujinx.app/ryubing/canary/-/releases)
+  </Card>
+</CardGroup>
+
+<Info>
+Stable builds are released every month or so to ensure consistent updates without overwhelming users with frequent individual downloads.
+</Info>
+
+## Installing Pre-Built Binaries
+
+<Tabs>
+  <Tab title="Windows">
+    <Steps>
+      <Step title="Download Ryujinx">
+        1. Visit the [Stable Releases page](https://git.ryujinx.app/ryubing/ryujinx/-/releases)
+        2. Download the latest Windows build (`.zip` file)
+        3. Alternatively, use the direct link: [Latest Stable Build](https://update.ryujinx.app/latest/stable)
+      </Step>
+      
+      <Step title="Extract the Archive">
+        1. Right-click the downloaded `.zip` file
+        2. Select "Extract All..."
+        3. Choose a destination folder (e.g., `C:\Program Files\Ryujinx` or `C:\Games\Ryujinx`)
+        4. Click "Extract"
+        
+        <Note>
+        Avoid extracting to a folder that requires administrator privileges to prevent permission issues.
+        </Note>
+      </Step>
+      
+      <Step title="Launch Ryujinx">
+        1. Navigate to the extracted folder
+        2. Double-click `Ryujinx.exe` to launch the emulator
+        3. On first launch, Ryujinx will create necessary configuration folders
+      </Step>
+      
+      <Step title="Optional: Create a Shortcut">
+        1. Right-click `Ryujinx.exe`
+        2. Select "Send to" > "Desktop (create shortcut)"
+        3. Rename the shortcut if desired
+      </Step>
+    </Steps>
+  </Tab>
+  
+  <Tab title="macOS">
+    <Steps>
+      <Step title="Download Ryujinx">
+        1. Visit the [Stable Releases page](https://git.ryujinx.app/ryubing/ryujinx/-/releases)
+        2. Download the latest macOS build (`.dmg` or `.app.tar.gz` file)
+        3. Alternatively, use the direct link: [Latest Stable Build](https://update.ryujinx.app/latest/stable)
+      </Step>
+      
+      <Step title="Install the Application">
+        **For `.dmg` files:**
+        1. Open the downloaded `.dmg` file
+        2. Drag `Ryujinx.app` to your Applications folder
+        
+        **For `.app.tar.gz` files:**
+        1. Extract the archive by double-clicking it
+        2. Move `Ryujinx.app` to your Applications folder
+      </Step>
+      
+      <Step title="First Launch">
+        1. Open Applications and locate Ryujinx
+        2. Right-click (or Control-click) on Ryujinx.app
+        3. Select "Open" from the context menu
+        4. Click "Open" in the security dialog
+        
+        <Warning>
+        macOS may show a security warning for unsigned applications. You only need to use the right-click method on the first launch.
+        </Warning>
+      </Step>
+      
+      <Step title="Graphics API Setup">
+        macOS uses Metal API through MoltenVK for graphics rendering. This is configured automatically, but you can verify in Settings > Graphics.
+      </Step>
+    </Steps>
+  </Tab>
+  
+  <Tab title="Linux">
+    <Steps>
+      <Step title="Download Ryujinx">
+        1. Visit the [Stable Releases page](https://git.ryujinx.app/ryubing/ryujinx/-/releases)
+        2. Download the latest Linux build (`.tar.gz` file)
+        3. Alternatively, use the direct link: [Latest Stable Build](https://update.ryujinx.app/latest/stable)
+      </Step>
+      
+      <Step title="Extract the Archive">
+        Open a terminal and run:
+        
+        ```bash
+        cd ~/Downloads
+        tar -xzf ryujinx-*.tar.gz
+        sudo mv ryujinx /opt/
+        ```
+        
+        Or extract to a location of your choice:
+        
+        ```bash
+        mkdir -p ~/Applications
+        tar -xzf ryujinx-*.tar.gz -C ~/Applications/
+        ```
+      </Step>
+      
+      <Step title="Install Dependencies">
+        Install required libraries for your distribution:
+        
+        <CodeGroup>
+          ```bash Ubuntu/Debian
+          sudo apt update
+          sudo apt install libsdl3-dev libopenal-dev libvulkan1
+          ```
+          
+          ```bash Fedora
+          sudo dnf install SDL3-devel openal-soft vulkan-loader
+          ```
+          
+          ```bash Arch Linux
+          sudo pacman -S sdl3 openal vulkan-icd-loader
+          ```
+        </CodeGroup>
+      </Step>
+      
+      <Step title="Launch Ryujinx">
+        Run from terminal:
+        
+        ```bash
+        cd /opt/ryujinx  # or your installation path
+        ./Ryujinx
+        ```
+        
+        <Note>
+        You may want to create a desktop entry or shell alias for easier access.
+        </Note>
+      </Step>
+      
+      <Step title="Optional: Create Desktop Entry">
+        Create a file `~/.local/share/applications/ryujinx.desktop`:
+        
+        ```desktop
+        [Desktop Entry]
+        Version=1.0
+        Type=Application
+        Name=Ryujinx
+        Comment=Nintendo Switch Emulator
+        Exec=/opt/ryujinx/Ryujinx
+        Icon=/opt/ryujinx/ryujinx.png
+        Terminal=false
+        Categories=Game;Emulator;
+        ```
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+## Building from Source
+
+If you want to build Ryujinx from source (for development or customization), follow these steps:
+
+<Warning>
+Building from source is intended for developers and contributors. Most users should use the pre-built binaries above.
+</Warning>
+
+<Steps>
+  <Step title="Install .NET SDK">
+    Install the .NET 10.0 SDK or higher:
+    
+    1. Visit [dotnet.microsoft.com/download/dotnet/10.0](https://dotnet.microsoft.com/download/dotnet/10.0)
+    2. Download and install the SDK for your platform
+    3. Verify installation:
+    
+    ```bash
+    dotnet --version
+    ```
+    
+    <Info>
+    The minimum required version is specified in `global.json` (currently **10.0.100**). Your SDK version must be equal to or higher than this.
+    </Info>
+  </Step>
+  
+  <Step title="Clone the Repository">
+    Clone the Ryujinx repository:
+    
+    ```bash
+    git clone https://git.ryujinx.app/ryubing/ryujinx.git
+    cd ryujinx
+    ```
+    
+    Or download the source as a ZIP file from GitLab and extract it.
+  </Step>
+  
+  <Step title="Build the Project">
+    Open a terminal in the project directory and run:
+    
+    ```bash
+    dotnet build -c Release -o build
+    ```
+    
+    <Note>
+    On Windows, you can quickly open a command prompt in File Explorer by holding Shift, right-clicking in the folder, and selecting "Open command window here" or "Open PowerShell window here".
+    </Note>
+    
+    The built files will be in the `build` directory.
+  </Step>
+  
+  <Step title="Run Your Build">
+    <CodeGroup>
+      ```bash Windows
+      cd build
+      .\Ryujinx.exe
+      ```
+      
+      ```bash macOS/Linux
+      cd build
+      ./Ryujinx
+      ```
+    </CodeGroup>
+  </Step>
+</Steps>
+
+## Data Folder Location
+
+Ryujinx stores system files, saves, and configuration in the Ryujinx data folder:
+
+<CodeGroup>
+  ```text Windows
+  C:\Users\[YourUsername]\AppData\Roaming\Ryujinx
+  ```
+  
+  ```text macOS
+  ~/Library/Application Support/Ryujinx
+  ```
+  
+  ```text Linux
+  ~/.config/Ryujinx
+  ```
+</CodeGroup>
+
+<Info>
+You can quickly access this folder by clicking **File > Open Ryujinx Folder** in the GUI.
+</Info>
+
+## Troubleshooting Installation
+
+<AccordionGroup>
+  <Accordion title="Windows: 'Missing DLL' errors">
+    Install the latest Visual C++ Redistributable:
+    - [Download VC++ Redistributable](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist)
+    
+    Also ensure you have .NET Desktop Runtime installed if needed.
+  </Accordion>
+  
+  <Accordion title="macOS: 'App is damaged' message">
+    This is a Gatekeeper issue. Run in Terminal:
+    
+    ```bash
+    xattr -cr /Applications/Ryujinx.app
+    ```
+    
+    Then try launching again.
+  </Accordion>
+  
+  <Accordion title="Linux: Graphics/rendering issues">
+    Ensure you have proper graphics drivers installed:
+    
+    **NVIDIA:**
+    ```bash
+    sudo ubuntu-drivers autoinstall  # Ubuntu
+    ```
+    
+    **AMD/Intel:**
+    Mesa drivers should work out of the box on most distributions.
+  </Accordion>
+  
+  <Accordion title="Build from source: .NET version mismatch">
+    Check your .NET SDK version:
+    ```bash
+    dotnet --version
+    ```
+    
+    Must be >= 10.0.100. Install a newer SDK if needed.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+Now that Ryujinx is installed:
+
+<CardGroup cols={2}>
+  <Card title="Quick Start Guide" icon="rocket" href="/quickstart">
+    Learn how to load and play your first game
+  </Card>
+  <Card title="Configuration" icon="sliders" href="/configuration">
+    Optimize Ryujinx settings for your system
+  </Card>
+</CardGroup>

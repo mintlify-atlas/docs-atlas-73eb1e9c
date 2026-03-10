@@ -1,0 +1,430 @@
+---
+title: Input Support
+description: Learn about controller support, keyboard/mouse input, and motion controls in Ryujinx
+icon: gamepad
+---
+
+Ryujinx provides comprehensive input support for various controller types, keyboard and mouse, touch input, and motion controls, ensuring you can play games the way you prefer.
+
+## Supported Input Devices
+
+Ryujinx supports a wide range of input devices:
+
+<CardGroup cols={2}>
+  <Card title="Game Controllers" icon="gamepad" iconType="duotone">
+    Xbox, PlayStation, Nintendo, and generic controllers
+  </Card>
+  <Card title="Keyboard & Mouse" icon="keyboard" iconType="duotone">
+    Full keyboard mapping with mouse support
+  </Card>
+  <Card title="Touch Input" icon="hand-pointer" iconType="duotone">
+    Touch screen emulation for compatible displays
+  </Card>
+  <Card title="Motion Controls" icon="sensor" iconType="duotone">
+    Gyroscope and accelerometer emulation
+  </Card>
+</CardGroup>
+
+## Controller Types
+
+Ryujinx emulates all official Nintendo Switch controller configurations:
+
+### Nintendo Switch Controllers
+
+<Tabs>
+  <Tab title="Pro Controller">
+    ### Pro Controller
+    
+    The standard full-featured controller:
+    
+    - Full button layout
+    - Dual analog sticks
+    - Built-in motion controls
+    - HD rumble support
+    - Most compatible with games
+    
+    <Info>
+    Pro Controller mode is recommended for most games and works with any modern gamepad.
+    </Info>
+  </Tab>
+  
+  <Tab title="Joy-Con Pair">
+    ### Joy-Con Pair
+    
+    Two Joy-Cons used together:
+    
+    - Split Joy-Con L and Joy-Con R
+    - Independent motion in each Joy-Con
+    - Required for some motion-heavy games
+    - Emulates grip or separated mode
+    
+    <Note>
+    Some games like *1-2-Switch* require Joy-Con pair mode for proper motion control.
+    </Note>
+  </Tab>
+  
+  <Tab title="Handheld">
+    ### Handheld Mode
+    
+    Emulates the Switch in portable mode:
+    
+    - Attached Joy-Cons configuration
+    - Touch screen enabled
+    - Different button layout
+    - Used by some games for specific features
+  </Tab>
+  
+  <Tab title="Single Joy-Con">
+    ### Single Joy-Con
+    
+    Individual Joy-Con L or R:
+    
+    - Sideways orientation option
+    - Reduced button count
+    - Used for multiplayer games
+    - SR/SL button support
+  </Tab>
+</Tabs>
+
+### Controller Type Configuration
+
+```csharp
+// From ControllerType.cs
+public enum ControllerType
+{
+    ProController,      // Full controller (most common)
+    Handheld,          // Portable mode
+    JoyconPair,        // Dual Joy-Cons
+    JoyconLeft,        // Single left Joy-Con
+    JoyconRight,       // Single right Joy-Con
+    Pokeball,          // Poké Ball Plus controller
+}
+```
+
+## Input Mapping
+
+Ryujinx provides a comprehensive input configuration menu:
+
+### Configurable Inputs
+
+<CardGroup cols={2}>
+  <Card title="Face Buttons" icon="circle">
+    A, B, X, Y buttons with custom mapping
+  </Card>
+  <Card title="D-Pad" icon="square">
+    Up, Down, Left, Right directional pad
+  </Card>
+  <Card title="Shoulder Buttons" icon="rectangle-wide">
+    L, R, ZL, ZR triggers and bumpers
+  </Card>
+  <Card title="Analog Sticks" icon="bullseye">
+    Left and right stick with deadzone control
+  </Card>
+  <Card title="System Buttons" icon="power-off">
+    Home, Capture, Plus, Minus buttons
+  </Card>
+  <Card title="Stick Clicks" icon="hand-point-down">
+    L3/R3 stick press actions
+  </Card>
+</CardGroup>
+
+### Button Mapping Process
+
+1. Open **Options** → **Settings** → **Input**
+2. Select your controller or create new profile
+3. Choose controller type (Pro Controller recommended)
+4. Click on a button to remap it
+5. Press the desired button/key on your input device
+6. Save the configuration
+
+<Info>
+Ryujinx automatically detects most controllers. If your controller isn't recognized, try connecting it in a different USB port or checking for driver updates.
+</Info>
+
+## Keyboard and Mouse Support
+
+Full keyboard and mouse input is supported:
+
+### Keyboard Mapping
+
+- **Any Key Assignment**: Map any keyboard key to any Switch button
+- **Multiple Keys**: Assign multiple keyboard keys to the same button if desired
+- **Modifier Support**: Use with Shift, Ctrl, Alt combinations
+- **Layout Independent**: Works with any keyboard layout
+
+### Mouse Support
+
+| Feature | Description |
+|---------|-------------|
+| **Motion Controls** | Mouse movement can emulate gyro motion |
+| **Button Mapping** | Mouse buttons can be mapped to controller buttons |
+| **Touch Emulation** | Mouse clicks can emulate touch screen input |
+| **Camera Control** | Mouse can control right stick for camera |
+
+<Note>
+Keyboard and mouse is excellent for games that don't rely heavily on motion controls. First-person games often work particularly well.
+</Note>
+
+## Motion Controls
+
+Motion control support varies by input method:
+
+### Native Motion Support
+
+<CardGroup cols={2}>
+  <Card title="DualShock 4" icon="playstation">
+    PlayStation 4 controllers have built-in gyroscopes that Ryujinx can use directly
+  </Card>
+  <Card title="DualSense" icon="playstation">
+    PlayStation 5 controllers offer excellent motion sensor support
+  </Card>
+  <Card title="Nintendo Pro Controller" icon="n">
+    Official Switch Pro Controllers have native motion support
+  </Card>
+  <Card title="Joy-Cons" icon="gamepad">
+    Real Joy-Cons connected via Bluetooth provide authentic motion
+  </Card>
+</CardGroup>
+
+### Motion Control Helpers
+
+For controllers without native motion:
+
+<Tabs>
+  <Tab title="CemuHook Protocol">
+    ### CemuHook Protocol
+    
+    Ryujinx supports the CemuHook motion protocol:
+    
+    ```csharp
+    // From Motion/CemuHook/Client.cs
+    // Receives motion data from external sources
+    ```
+    
+    **Compatible Tools:**
+    - DSU (DualShock UDP) servers
+    - Phone apps (use your phone as a motion controller)
+    - Third-party motion solutions
+    
+    <Info>
+    CemuHook allows you to use your smartphone as a motion controller by installing a compatible app.
+    </Info>
+  </Tab>
+  
+  <Tab title="DS4Windows">
+    ### DS4Windows
+    
+    For DualShock 4 controllers on Windows:
+    
+    - Provides motion data to Ryujinx
+    - Enables dual Joy-Con motion emulation
+    - Configurable sensitivity
+    - Works with both wired and wireless
+    
+    **Setup:**
+    1. Install DS4Windows
+    2. Enable UDP server in DS4Windows
+    3. Configure Ryujinx to use CemuHook protocol
+  </Tab>
+  
+  <Tab title="BetterJoy">
+    ### BetterJoy
+    
+    For real Joy-Cons and Pro Controllers:
+    
+    - Connects real Nintendo controllers to PC
+    - Provides authentic motion data
+    - Supports dual Joy-Con independent motion
+    - Best accuracy for motion-heavy games
+    
+    <Note>
+    BetterJoy is recommended if you own real Nintendo Switch controllers for the most authentic experience.
+    </Note>
+  </Tab>
+  
+  <Tab title="Mouse Motion">
+    ### Mouse Motion Emulation
+    
+    Use mouse movement as motion:
+    
+    - Move mouse to emulate tilting
+    - Works without special hardware
+    - Less precise than gyro
+    - Good for games with simple motion needs
+  </Tab>
+</Tabs>
+
+## Input Configuration
+
+The input configuration system is highly flexible:
+
+### Configuration Features
+
+| Feature | Description |
+|---------|-------------|
+| **Profiles** | Save multiple input configurations |
+| **Per-Game Settings** | Different controls for different games |
+| **Deadzone Control** | Adjust stick sensitivity |
+| **Trigger Threshold** | Configure analog trigger activation point |
+| **Rumble Strength** | Adjust vibration intensity |
+| **Motion Sensitivity** | Fine-tune gyro responsiveness |
+
+### Deadzone Configuration
+
+<Info>
+**Deadzones** prevent stick drift by ignoring small movements. If your controller has drift, increase the deadzone.
+</Info>
+
+Adjustable deadzone settings:
+- **Inner Deadzone**: Minimum movement to register
+- **Outer Deadzone**: Maximum movement range
+- **Per-stick Configuration**: Different settings for each analog stick
+
+## Touch Screen Support
+
+Emulates the Switch's capacitive touch screen:
+
+<CardGroup cols={2}>
+  <Card title="Mouse Touch" icon="arrow-pointer">
+    Click and drag with mouse to emulate finger touches
+  </Card>
+  <Card title="Touchscreen Display" icon="tablet-screen">
+    Use actual touch screens on compatible devices
+  </Card>
+</CardGroup>
+
+### Touch Features
+
+- **Multi-touch Support**: Multiple simultaneous touch points
+- **Gesture Recognition**: Swipes, pinches, and drags
+- **Pressure Sensitivity**: Emulates touch pressure when supported
+- **Touch Coordinates**: Accurate position mapping
+
+```csharp
+// From TouchScreenManager.cs
+public class TouchScreenManager
+{
+    // Manages touch input state and translation
+}
+```
+
+## SDL3 Integration
+
+Ryujinx uses SDL3 for cross-platform input handling:
+
+### SDL3 Advantages
+
+- **Broad Compatibility**: Supports hundreds of controller models
+- **Hot-plugging**: Connect/disconnect controllers during gameplay
+- **Automatic Mapping**: Database of controller layouts
+- **Cross-platform**: Consistent behavior on Windows, Linux, macOS
+
+```csharp
+// From SDL3GamepadDriver.cs
+public class SDL3GamepadDriver : IGamepadDriver
+{
+    // SDL3 gamepad implementation
+}
+```
+
+## Gamepad Features
+
+Modern gamepad features supported:
+
+| Feature | Support Status |
+|---------|---------------|
+| **HD Rumble** | Emulated via standard rumble |
+| **Analog Triggers** | Full analog support (Xbox triggers, etc.) |
+| **Button Pressure** | Supported if hardware provides it |
+| **LED Control** | Player indicator LEDs on compatible controllers |
+
+<Note>
+While Ryujinx emulates HD Rumble, standard rumble motors can't reproduce the fine haptic detail of real Joy-Cons.
+</Note>
+
+## Multi-Controller Support
+
+Play multiplayer games with multiple controllers:
+
+- **Up to 8 Players**: Full 8-player local multiplayer support
+- **Mixed Input Types**: Combine controllers and keyboards
+- **Independent Configuration**: Each player can have unique settings
+- **Handheld + Controllers**: One player on handheld, others on separate controllers
+
+## Input Manager
+
+The input system architecture:
+
+```csharp
+// From InputManager.cs
+public class InputManager
+{
+    // Central input management
+    // Handles all input sources
+    // Routes to appropriate emulated controllers
+}
+```
+
+### Input Pipeline
+
+1. **Input Device** → Physical controller/keyboard/mouse
+2. **SDL3 Driver** → Raw input capture
+3. **Input Manager** → Maps to Switch controller
+4. **NpadManager** → Emulated controller state
+5. **Game** → Receives input as if from real Switch
+
+## Technical Details
+
+Key source locations:
+
+- **Input Core**: `src/Ryujinx.Input/`
+- **SDL3 Driver**: `src/Ryujinx.Input.SDL3/`
+- **HLE Input**: `src/Ryujinx.Input/HLE/`
+- **Motion Controls**: `src/Ryujinx.Input/Motion/`
+- **Configuration**: `src/Ryujinx.Common/Configuration/Hid/`
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Controller not detected">
+    - Reconnect the controller
+    - Check USB connection or Bluetooth pairing
+    - Try a different USB port
+    - Update controller firmware and drivers
+    - Check if SDL3 recognizes it (test with SDL3 tools)
+  </Accordion>
+  
+  <Accordion title="Buttons mapped incorrectly">
+    - Open input configuration menu
+    - Delete existing profile and create new one
+    - Manually map each button
+    - Check for controller-specific drivers conflicting
+  </Accordion>
+  
+  <Accordion title="Motion controls not working">
+    - Verify your controller has a gyroscope
+    - Enable CemuHook/DSU if needed
+    - Check DS4Windows/BetterJoy is running
+    - Test with a game that obviously uses motion
+    - Increase motion sensitivity in settings
+  </Accordion>
+  
+  <Accordion title="Stick drift or unresponsive sticks">
+    - Increase deadzone in input settings
+    - Clean controller analog sticks
+    - Calibrate controller in system settings
+    - Test controller in other applications
+    - May need controller hardware repair
+  </Accordion>
+  
+  <Accordion title="Rumble not working">
+    - Check rumble is enabled in settings
+    - Adjust rumble strength (may be set to 0)
+    - Verify controller supports vibration
+    - Some games don't use rumble extensively
+  </Accordion>
+</AccordionGroup>
+
+<Info>
+The input system receives regular updates to support new controllers and improve compatibility. Report any issues on the Ryujinx repository.
+</Info>

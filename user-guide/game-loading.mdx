@@ -1,0 +1,240 @@
+---
+title: 'Game Loading'
+description: 'Learn how to load and manage Nintendo Switch games in Ryujinx'
+icon: 'gamepad'
+---
+
+Ryujinx supports multiple Nintendo Switch game file formats. This guide covers how to load games and understand the different file types supported by the emulator.
+
+## Supported File Formats
+
+Ryujinx can load games in the following formats:
+
+<CardGroup cols={2}>
+  <Card title="NSP Files" icon="file-archive">
+    Nintendo Submission Package - Contains installable games, updates, and DLC
+  </Card>
+  <Card title="XCI Files" icon="compact-disc">
+    NX Card Image - Dump of physical game cartridges
+  </Card>
+  <Card title="NCA Files" icon="file">
+    Nintendo Content Archive - Individual content files
+  </Card>
+  <Card title="NRO Files" icon="code">
+    Nintendo Relocatable Object - Homebrew applications
+  </Card>
+</CardGroup>
+
+<Note>
+NSO (Nintendo Shared Object) files are also supported but are typically used internally by the system.
+</Note>
+
+## Loading a Game
+
+There are multiple ways to load games in Ryujinx:
+
+<Steps>
+  <Step title="Add Game Directories">
+    Configure directories where your games are stored:
+    
+    1. Open **Settings** from the File menu
+    2. Navigate to the **UI** tab
+    3. Under **Game Directories**, click **Add**
+    4. Select the folder containing your game files
+    5. Click **Save**
+    
+    Ryujinx will scan these directories and display games in the main window.
+  </Step>
+  
+  <Step title="Launch from Game List">
+    Once your game directories are configured:
+    
+    - Games will appear in the main window with their icons and titles
+    - Double-click any game to launch it
+    - Right-click for additional options like managing DLC and mods
+  </Step>
+  
+  <Step title="Load Game File Directly">
+    To load a game file without adding to the library:
+    
+    1. Go to **File > Load Application**
+    2. Browse to your game file (NSP, XCI, NCA, or NRO)
+    3. Select the file and click **Open**
+    
+    The game will launch immediately.
+  </Step>
+</Steps>
+
+## File Format Details
+
+### NSP (Nintendo Submission Package)
+
+NSP files are the most common format for digital games. They contain:
+
+- Base game content
+- Updates and patches
+- Downloadable content (DLC)
+
+<Tabs>
+  <Tab title="Loading NSP">
+    ```plaintext
+    File > Load Application > Select .nsp file
+    ```
+    
+    NSP files can be loaded directly or installed to the game library. Ryujinx will automatically extract and manage the content.
+  </Tab>
+  
+  <Tab title="Installing NSP">
+    For better organization, install NSP files:
+    
+    1. Right-click in the game list
+    2. Select **Install NSP**
+    3. Choose your NSP file(s)
+    4. Games will be added to your library permanently
+  </Tab>
+</Tabs>
+
+### XCI (NX Card Image)
+
+XCI files are dumps of physical game cartridges. They may contain:
+
+- Base game
+- Updates (if present on cartridge)
+- Built-in DLC
+
+<Warning>
+XCI files bundled with updates or DLC will show a notice in the DLC manager. Bundled content cannot be disabled individually.
+</Warning>
+
+### NCA (Nintendo Content Archive)
+
+NCA files are individual content archives used by the Switch. They contain specific parts of games:
+
+- Application executable
+- Game data
+- Update data
+- DLC content
+
+<Note>
+Loading NCA files directly is primarily for advanced users. Most users should use NSP or XCI formats.
+</Note>
+
+### NRO (Nintendo Relocatable Object)
+
+NRO files are homebrew applications. These are:
+
+- Community-developed applications
+- Tools and utilities
+- Homebrew games
+
+```plaintext
+File > Load Application > Select .nro file
+```
+
+## Configuring Visible File Types
+
+You can control which file types appear in your game library:
+
+<Steps>
+  <Step title="Open Settings">
+    Navigate to **File > Settings**
+  </Step>
+  
+  <Step title="Configure File Types">
+    In the **UI** tab, find the **Shown File Types** section:
+    
+    - ☑ NSP - Nintendo Submission Package
+    - ☑ PFS0 - Partition FileSystem
+    - ☑ XCI - NX Card Image
+    - ☑ NCA - Nintendo Content Archive
+    - ☑ NRO - Nintendo Relocatable Object
+    - ☑ NSO - Nintendo Shared Object
+    
+    Uncheck any formats you don't want to see in your library.
+  </Step>
+</Steps>
+
+## Game Information
+
+Ryujinx displays detailed information for each game:
+
+- **Title**: Game name in your system language
+- **Developer**: Game developer/publisher
+- **Version**: Installed game version
+- **Title ID**: Unique 16-digit hexadecimal identifier
+- **File Size**: Total size of game files
+- **Play Time**: Total time played
+- **Last Played**: Most recent play session
+
+## Autoload Directories
+
+Autoload directories automatically scan for updates and DLC:
+
+<Steps>
+  <Step title="Configure Autoload">
+    In **Settings > UI**, find **Autoload Directories**
+  </Step>
+  
+  <Step title="Add Directories">
+    Add folders containing:
+    - Game updates
+    - DLC packages
+    - Additional content
+  </Step>
+  
+  <Step title="Automatic Loading">
+    When you refresh your game library, Ryujinx will:
+    - Scan autoload directories
+    - Match content to installed games
+    - Apply updates and DLC automatically
+  </Step>
+</Steps>
+
+## Troubleshooting
+
+<Accordion title="Game doesn't appear in library">
+  **Solutions:**
+  - Verify the file format is supported (NSP, XCI, NCA, NRO)
+  - Check that the file type is enabled in Settings > UI > Shown File Types
+  - Ensure the game directory is added in Settings > UI > Game Directories
+  - Refresh the game library (File > Refresh)
+</Accordion>
+
+<Accordion title="Cannot load game file">
+  **Common causes:**
+  - Corrupted or incomplete download
+  - Encrypted content without proper keys
+  - Incompatible file format
+  
+  **Solutions:**
+  - Verify file integrity
+  - Ensure `prod.keys` is properly installed in the system directory
+  - Check log files for specific errors
+</Accordion>
+
+<Accordion title="Game loads but crashes immediately">
+  **Check:**
+  - System requirements (minimum 8GB RAM)
+  - Graphics backend compatibility (OpenGL 4.5+, Vulkan, or Metal)
+  - Latest firmware is installed
+  - Game-specific compatibility issues
+  
+  See [Troubleshooting](/user-guide/troubleshooting) for detailed diagnostic steps.
+</Accordion>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Configuration" icon="gear" href="/user-guide/configuration">
+    Configure emulator settings and system options
+  </Card>
+  <Card title="DLC and Mods" icon="puzzle-piece" href="/user-guide/dlc-and-mods">
+    Install downloadable content and apply mods
+  </Card>
+  <Card title="Graphics Settings" icon="display" href="/user-guide/graphics-settings">
+    Optimize visual quality and performance
+  </Card>
+  <Card title="Input Configuration" icon="gamepad" href="/user-guide/input-configuration">
+    Set up controllers and keyboard input
+  </Card>
+</CardGroup>

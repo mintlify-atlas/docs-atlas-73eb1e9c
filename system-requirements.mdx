@@ -1,0 +1,519 @@
+---
+title: System Requirements
+description: Minimum and recommended hardware specifications for running Ryujinx
+---
+
+# System Requirements
+
+Ryujinx is a demanding application that requires a modern computer to run Nintendo Switch games effectively. This page outlines the minimum and recommended specifications.
+
+<Warning>
+**Critical Requirement:** Your PC must be equipped with **at least 8GB of RAM**. Failing to meet this requirement may result in a poor gameplay experience or unexpected crashes.
+</Warning>
+
+## Quick Reference
+
+<CardGroup cols={2}>
+  <Card title="Minimum Specs" icon="server">
+    Basic requirements to run Ryujinx
+    
+    - **RAM**: 8GB (required)
+    - **CPU**: 64-bit with AVX support
+    - **.NET**: SDK 10.0.100+
+    - **GPU**: OpenGL 4.5 / Vulkan support
+  </Card>
+  <Card title="Recommended Specs" icon="rocket">
+    For optimal performance
+    
+    - **RAM**: 16GB or more
+    - **CPU**: Modern multi-core (4+ cores)
+    - **.NET**: Latest .NET SDK
+    - **GPU**: Dedicated GPU with Vulkan
+  </Card>
+</CardGroup>
+
+## Operating System Requirements
+
+<Tabs>
+  <Tab title="Windows">
+    ### Minimum
+    - **OS**: Windows 10 (64-bit) version 1809 or later
+    - **Version**: Windows 11 is fully supported
+    
+    ### Recommended
+    - **OS**: Windows 10/11 (64-bit), latest version
+    - **Updates**: Keep Windows Update current for best driver support
+    
+    <Note>
+    Windows 7 and 8.1 are **not supported**. Ryujinx requires modern Windows APIs and .NET runtime features.
+    </Note>
+  </Tab>
+  
+  <Tab title="macOS">
+    ### Minimum
+    - **OS**: macOS 10.15 (Catalina) or later
+    - **Architecture**: Intel or Apple Silicon (M1/M2/M3)
+    
+    ### Recommended
+    - **OS**: macOS 12 (Monterey) or later
+    - **Architecture**: Apple Silicon (M1/M2/M3) for best performance
+    
+    <Info>
+    **Graphics Note:** macOS uses Metal API via MoltenVK for graphics rendering. Ensure your Mac supports Metal 2 or later.
+    </Info>
+    
+    ### Apple Silicon Performance
+    Apple Silicon Macs (M1/M2/M3) run Ryujinx through Rosetta 2 translation but still provide excellent performance due to strong single-thread performance and unified memory architecture.
+  </Tab>
+  
+  <Tab title="Linux">
+    ### Minimum
+    - **Kernel**: Linux kernel 4.15 or later
+    - **Distribution**: Any modern 64-bit distribution
+    - **Architecture**: x86_64 (64-bit)
+    
+    ### Recommended
+    - **Kernel**: Linux kernel 5.10 or later
+    - **Distribution**: Ubuntu 20.04+, Fedora 35+, Arch Linux (current)
+    
+    ### Tested Distributions
+    - Ubuntu / Debian
+    - Fedora / RHEL
+    - Arch Linux / Manjaro
+    - openSUSE
+    - Pop!_OS
+    
+    <Note>
+    Other distributions should work as long as dependencies are met. You may need to compile some libraries from source.
+    </Note>
+  </Tab>
+</Tabs>
+
+## Hardware Requirements
+
+### Memory (RAM)
+
+<AccordionGroup>
+  <Accordion title="8GB RAM - Minimum Required" icon="exclamation-triangle">
+    **Status:** Will run, but with limitations
+    
+    - Can run most games
+    - May experience memory pressure with demanding titles
+    - Close other applications while playing
+    - Avoid high resolution scaling
+    - Some games may crash due to memory constraints
+    
+    <Warning>
+    With only 8GB, your system should have minimal background applications running. Games like The Legend of Zelda: Tears of the Kingdom may require more.
+    </Warning>
+  </Accordion>
+  
+  <Accordion title="16GB RAM - Recommended" icon="check-circle">
+    **Status:** Ideal for most users
+    
+    - Comfortable headroom for all games
+    - Can run background applications
+    - Supports moderate resolution scaling (2x-3x)
+    - Stable performance across game library
+    - Recommended for typical gaming sessions
+  </Accordion>
+  
+  <Accordion title="32GB+ RAM - Enthusiast" icon="star">
+    **Status:** Best experience
+    
+    - Maximum resolution scaling (4x+)
+    - Heavy multitasking while gaming
+    - Ideal for content creation (streaming, recording)
+    - Future-proof for demanding titles
+  </Accordion>
+</AccordionGroup>
+
+### Processor (CPU)
+
+**Minimum Requirements:**
+- **Architecture**: x86_64 (64-bit)
+- **Instruction Set**: AVX support required
+- **Cores**: 2 cores / 4 threads minimum
+- **Example**: Intel Core i5-4430 or AMD Ryzen 3 1200
+
+**Recommended Specifications:**
+- **Cores**: 4+ cores / 8+ threads
+- **Clock Speed**: 3.5 GHz or higher (boost)
+- **Architecture**: Modern architecture (2017+)
+- **Examples**: 
+  - Intel Core i5-8400 or better
+  - AMD Ryzen 5 2600 or better
+  - Apple M1 or better
+
+<Info>
+**Why Strong CPU Matters:** Ryujinx uses ARMeilleure to translate ARM instructions to x86. This is CPU-intensive and benefits greatly from:
+- High single-thread performance (for game logic)
+- Multiple cores (for parallel translation)
+- Modern instruction sets (AVX2, etc.)
+</Info>
+
+#### CPU Compatibility Notes
+
+<CardGroup cols={2}>
+  <Card title="Intel Processors" icon="microchip">
+    - **Minimum**: 4th gen (Haswell) or later
+    - **Recommended**: 8th gen (Coffee Lake) or later
+    - **Best**: 12th gen (Alder Lake) or later
+    
+    Older processors may lack required AVX instructions.
+  </Card>
+  <Card title="AMD Processors" icon="microchip">
+    - **Minimum**: Ryzen 1000 series or later
+    - **Recommended**: Ryzen 3000 series or later
+    - **Best**: Ryzen 5000/7000 series
+    
+    Zen 2 and later offer excellent performance.
+  </Card>
+</CardGroup>
+
+### Graphics Card (GPU)
+
+**Minimum Requirements:**
+- **OpenGL**: Version 4.5 or later, OR
+- **Vulkan**: Support for Vulkan 1.0+
+- **VRAM**: 2GB minimum
+- **Examples**:
+  - NVIDIA GeForce GTX 750 Ti
+  - AMD Radeon RX 460
+  - Intel HD Graphics 530 (with driver support)
+
+**Recommended Specifications:**
+- **Vulkan Support**: Vulkan 1.1+ (preferred API)
+- **VRAM**: 4GB or more
+- **Architecture**: Modern GPU (2016+)
+- **Examples**:
+  - NVIDIA GeForce GTX 1060 6GB or better
+  - AMD Radeon RX 580 or better
+  - Intel Arc A380 or better
+  - Apple M1 integrated GPU or better
+
+<Tabs>
+  <Tab title="NVIDIA">
+    ### Recommended NVIDIA GPUs
+    
+    **Budget (1080p native):**
+    - GTX 1050 Ti
+    - GTX 1650
+    - RTX 3050
+    
+    **Mid-Range (1080p/1440p with scaling):**
+    - GTX 1660 Super
+    - RTX 2060
+    - RTX 3060
+    - RTX 4060
+    
+    **High-End (4K or high resolution scaling):**
+    - RTX 3070 or better
+    - RTX 4070 or better
+    
+    <Info>
+    NVIDIA GPUs generally have excellent Vulkan and OpenGL driver support on all platforms.
+    </Info>
+  </Tab>
+  
+  <Tab title="AMD">
+    ### Recommended AMD GPUs
+    
+    **Budget (1080p native):**
+    - RX 5500 XT
+    - RX 6500 XT
+    
+    **Mid-Range (1080p/1440p with scaling):**
+    - RX 5600 XT
+    - RX 6600 XT
+    - RX 7600
+    
+    **High-End (4K or high resolution scaling):**
+    - RX 6700 XT or better
+    - RX 7800 XT or better
+    
+    <Note>
+    AMD GPUs work best with Vulkan backend. Ensure you have the latest drivers installed.
+    </Note>
+  </Tab>
+  
+  <Tab title="Intel">
+    ### Intel Graphics
+    
+    **Integrated Graphics:**
+    - **Iris Xe** (11th gen and later): Capable of running most games at native resolution
+    - **UHD Graphics 630** (7th-10th gen): Can run lighter games, limited performance
+    
+    **Discrete Graphics:**
+    - **Arc A380**: Entry-level, adequate for native resolution
+    - **Arc A750/A770**: Good performance with resolution scaling
+    
+    <Warning>
+    Older Intel integrated graphics (HD Graphics 4000-500 series) have poor OpenGL/Vulkan driver support and are **not recommended**.
+    </Warning>
+  </Tab>
+  
+  <Tab title="Apple Silicon">
+    ### Apple Silicon GPUs
+    
+    All Apple Silicon Macs have integrated GPUs that provide excellent performance:
+    
+    - **M1**: 7-8 core GPU - Good performance for most games
+    - **M1 Pro**: 14-16 core GPU - Great performance, 2x scaling
+    - **M1 Max**: 24-32 core GPU - Excellent, 3x-4x scaling
+    - **M2**: 8-10 core GPU - Improved over M1
+    - **M2 Pro/Max**: Similar improvements to M1 equivalents
+    - **M3 series**: Latest, best performance
+    
+    <Info>
+    Apple Silicon uses Metal API via MoltenVK. Unified memory architecture means GPU shares system RAM.
+    </Info>
+  </Tab>
+</Tabs>
+
+### Storage
+
+**Requirements:**
+- **Ryujinx Installation**: ~500 MB
+- **Firmware Files**: ~500 MB
+- **Per Game**: 4-16 GB (varies by title)
+- **Shader Cache**: 100 MB - 2 GB per game
+- **PPTC Cache**: 50-500 MB per game
+- **Save Data**: 10-100 MB per game
+
+**Recommended:**
+- **Type**: SSD (Solid State Drive)
+- **Space**: 50+ GB free for comfortable game library
+- **Speed**: Faster storage reduces load times and shader compilation time
+
+<Info>
+While Ryujinx can run from an HDD, an SSD significantly improves:
+- Initial load times
+- PPTC cache building
+- Shader compilation performance
+- Overall responsiveness
+</Info>
+
+## Software Requirements
+
+### .NET SDK
+
+<Note>
+**For End Users (Pre-built Binaries):** .NET runtime is bundled with releases. No separate installation needed.
+
+**For Developers (Building from Source):** .NET 10.0 SDK or higher required.
+</Note>
+
+**Building from Source:**
+- **Minimum Version**: 10.0.100 (specified in `global.json`)
+- **Download**: [dotnet.microsoft.com/download/dotnet/10.0](https://dotnet.microsoft.com/download/dotnet/10.0)
+- **Version Check**: Run `dotnet --version` to verify
+
+### Graphics API Support
+
+<Tabs>
+  <Tab title="Vulkan (Recommended)">
+    **Best Performance & Compatibility**
+    
+    **Requirements:**
+    - Vulkan 1.0 minimum, 1.1+ recommended
+    - Up-to-date graphics drivers
+    
+    **Check Vulkan Support:**
+    
+    <CodeGroup>
+      ```bash Windows
+      # Download and run vulkaninfo.exe from Vulkan SDK
+      # Or check GPU manufacturer's driver info
+      ```
+      
+      ```bash Linux
+      vulkaninfo | grep "Vulkan Instance Version"
+      # Install: sudo apt install vulkan-tools
+      ```
+      
+      ```bash macOS
+      # Metal is used via MoltenVK translation layer
+      system_profiler SPDisplaysDataType
+      ```
+    </CodeGroup>
+  </Tab>
+  
+  <Tab title="OpenGL">
+    **Good Compatibility**
+    
+    **Requirements:**
+    - OpenGL 4.5 minimum
+    - 4.6 recommended for best compatibility
+    
+    **Check OpenGL Version:**
+    Most GPUs from 2014+ support OpenGL 4.5. Check your GPU manufacturer's specifications.
+  </Tab>
+  
+  <Tab title="Metal (macOS)">
+    **macOS Exclusive**
+    
+    **Requirements:**
+    - Metal 2 or later
+    - Supported on all Macs from 2012+
+    
+    Metal is automatically used via MoltenVK on macOS. No configuration needed.
+  </Tab>
+</Tabs>
+
+### Platform-Specific Dependencies
+
+<AccordionGroup>
+  <Accordion title="Windows Dependencies">
+    **Usually Pre-installed:**
+    - DirectX 12 (Windows 10/11)
+    - Visual C++ Redistributables
+    
+    **If Needed:**
+    - [Visual C++ Redistributable](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist) (all versions)
+    - Latest GPU drivers from NVIDIA/AMD/Intel
+  </Accordion>
+  
+  <Accordion title="macOS Dependencies">
+    **Built-in:**
+    - Metal API
+    - System frameworks
+    
+    **May Need:**
+    - Xcode Command Line Tools (for some features)
+    ```bash
+    xcode-select --install
+    ```
+  </Accordion>
+  
+  <Accordion title="Linux Dependencies">
+    **Required Libraries:**
+    
+    <CodeGroup>
+      ```bash Ubuntu/Debian
+      sudo apt install libsdl3-dev libopenal-dev \
+        libvulkan1 mesa-vulkan-drivers
+      ```
+      
+      ```bash Fedora
+      sudo dnf install SDL3-devel openal-soft \
+        vulkan-loader mesa-vulkan-drivers
+      ```
+      
+      ```bash Arch Linux
+      sudo pacman -S sdl3 openal \
+        vulkan-icd-loader vulkan-driver
+      ```
+    </CodeGroup>
+    
+    **Graphics Drivers:**
+    - NVIDIA: Install proprietary drivers
+    - AMD/Intel: Mesa drivers (usually pre-installed)
+  </Accordion>
+</AccordionGroup>
+
+## Performance Expectations
+
+Performance varies greatly by game and system:
+
+<Steps>
+  <Step title="Simple 2D Games">
+    **Examples:** Indie platformers, visual novels
+    
+    - Even minimum specs can run at full speed
+    - Low CPU and GPU requirements
+    - 8GB RAM sufficient
+  </Step>
+  
+  <Step title="Standard 3D Games">
+    **Examples:** Mario Kart 8, Splatoon 2
+    
+    - Recommended specs needed for consistent 60fps
+    - 16GB RAM recommended
+    - Modern GPU helps with resolution scaling
+  </Step>
+  
+  <Step title="Demanding AAA Games">
+    **Examples:** Zelda: Tears of the Kingdom, Xenoblade Chronicles
+    
+    - High-end recommended specs for best experience
+    - 16GB+ RAM strongly recommended
+    - Strong CPU critical (high single-thread performance)
+    - Dedicated GPU recommended
+  </Step>
+</Steps>
+
+<Warning>
+Even with high-end hardware, some games may not run at full speed due to emulation accuracy requirements. Check game compatibility lists and community reports for specific titles.
+</Warning>
+
+## Checking Your System
+
+<Tabs>
+  <Tab title="Windows">
+    **View System Info:**
+    1. Press `Win + Pause/Break`, or
+    2. Right-click "This PC" > Properties
+    
+    **Check GPU:**
+    1. Right-click desktop > Display settings
+    2. Scroll down > Advanced display settings
+    3. Display adapter properties
+    
+    **Or use System Information:**
+    - Press `Win + R`
+    - Type `msinfo32` and press Enter
+  </Tab>
+  
+  <Tab title="macOS">
+    **System Information:**
+    1. Click Apple menu >  About This Mac
+    2. View Memory, Processor, and Graphics
+    
+    **Detailed Info:**
+    ```bash
+    system_profiler SPHardwareDataType
+    system_profiler SPDisplaysDataType
+    ```
+  </Tab>
+  
+  <Tab title="Linux">
+    **Terminal Commands:**
+    
+    ```bash
+    # RAM
+    free -h
+    
+    # CPU
+    lscpu | grep "Model name"
+    
+    # GPU
+    lspci | grep VGA
+    
+    # OpenGL Version
+    glxinfo | grep "OpenGL version"
+    
+    # Vulkan
+    vulkaninfo | grep "Vulkan Instance Version"
+    ```
+  </Tab>
+</Tabs>
+
+## Next Steps
+
+If your system meets the requirements:
+
+<CardGroup cols={2}>
+  <Card title="Installation Guide" icon="download" href="/installation">
+    Download and install Ryujinx on your platform
+  </Card>
+  <Card title="Quick Start" icon="rocket" href="/quickstart">
+    Set up Ryujinx and play your first game
+  </Card>
+</CardGroup>
+
+If your system doesn't meet requirements:
+
+<Info>
+Consider upgrading RAM to 16GB as the most impactful improvement, followed by getting a dedicated GPU if using integrated graphics.
+</Info>

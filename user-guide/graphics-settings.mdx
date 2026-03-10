@@ -1,0 +1,636 @@
+---
+title: 'Graphics Settings'
+description: 'Configure graphics backend, resolution scaling, and visual enhancements in Ryujinx'
+icon: 'display'
+---
+
+Ryujinx emulates the Nintendo Switch's Maxwell GPU using modern graphics APIs. This guide covers graphics backend selection, resolution scaling, and visual enhancements to optimize your gaming experience.
+
+## Graphics Backend Selection
+
+Ryujinx supports three graphics backends depending on your platform:
+
+<Tabs>
+  <Tab title="Vulkan">
+    **Recommended for most users**
+    
+    **Advantages:**
+    - Best performance on modern GPUs
+    - Lower CPU overhead
+    - Better multi-threading support
+    - Required for macOS (via MoltenVK)
+    
+    **Requirements:**
+    - Vulkan 1.2+ compatible GPU
+    - Latest graphics drivers
+    
+    **Platform Support:**
+    - Windows (with compatible GPU)
+    - Linux (native Vulkan)
+    - macOS (via MoltenVK)
+  </Tab>
+  
+  <Tab title="OpenGL">
+    **Fallback option**
+    
+    **Advantages:**
+    - Wider hardware compatibility
+    - Better for older GPUs
+    - Stable and mature
+    
+    **Requirements:**
+    - OpenGL 4.5 or higher
+    - NOT available on macOS
+    
+    **When to use:**
+    - Vulkan drivers are unstable
+    - Older GPU without Vulkan support
+    - Specific compatibility issues with Vulkan
+  </Tab>
+  
+  <Tab title="Metal">
+    **macOS exclusive**
+    
+    Ryujinx uses Vulkan with MoltenVK translation layer on macOS, which translates Vulkan calls to Metal.
+    
+    This is automatically configured - no user action needed.
+  </Tab>
+</Tabs>
+
+### Changing Graphics Backend
+
+<Steps>
+  <Step title="Open Graphics Settings">
+    Navigate to **File > Settings > Graphics**
+  </Step>
+  
+  <Step title="Select Backend">
+    Choose your preferred backend:
+    
+    ```json
+    "GraphicsBackend": "Vulkan"
+    ```
+    
+    Options:
+    - **Vulkan** (default on systems with Vulkan support)
+    - **OpenGL** (fallback, not available on macOS)
+  </Step>
+  
+  <Step title="Select GPU (Multi-GPU Systems)">
+    If you have multiple GPUs:
+    
+    1. Click the **Preferred GPU** dropdown
+    2. Select your dedicated GPU (usually marked as "dGPU")
+    3. Integrated GPUs are also listed but not recommended
+  </Step>
+  
+  <Step title="Restart Ryujinx">
+    <Warning>
+    Graphics backend changes require restarting Ryujinx to take effect.
+    </Warning>
+  </Step>
+</Steps>
+
+## Resolution Scaling
+
+Increase rendering resolution for sharper graphics:
+
+### Resolution Scale Options
+
+<CardGroup cols={2}>
+  <Card title="Native (1x)" icon="1">
+    **720p docked / 1080p handheld**
+    
+    Original Switch resolution. Best performance, lowest quality.
+  </Card>
+  
+  <Card title="2x" icon="2">
+    **1440p docked / 2160p handheld**
+    
+    Balanced quality and performance. Recommended for most systems.
+  </Card>
+  
+  <Card title="3x" icon="3">
+    **2160p docked / 3240p handheld**
+    
+    High quality. Requires powerful GPU.
+  </Card>
+  
+  <Card title="4x" icon="4">
+    **2880p docked / 4320p handheld**
+    
+    Maximum quality. Very demanding, recommended for high-end GPUs only.
+  </Card>
+</CardGroup>
+
+### Custom Resolution Scale
+
+For fine-tuned control:
+
+<Steps>
+  <Step title="Select Custom Scale">
+    In **Settings > Graphics**, set Resolution Scale to **Custom**
+  </Step>
+  
+  <Step title="Set Custom Value">
+    Enter a floating-point multiplier:
+    
+    ```json
+    "ResScale": -1,
+    "ResScaleCustom": 1.5
+    ```
+    
+    - **1.0** - Native resolution
+    - **1.5** - 1.5x scaling
+    - **2.5** - 2.5x scaling
+    - Up to **4.0** or higher
+  </Step>
+</Steps>
+
+<Note>
+Resolution scaling has the most significant impact on performance. Start with 2x and adjust based on your GPU capabilities.
+</Note>
+
+## Visual Enhancements
+
+Ryujinx offers six graphics enhancements:
+
+### 1. Disk Shader Caching
+
+Pre-compile and cache shaders for smoother gameplay:
+
+```json
+"EnableShaderCache": true
+```
+
+<Accordion title="How Shader Caching Works">
+  **First Run:**
+  - Shaders compile when needed during gameplay
+  - May cause stuttering when new effects appear
+  - Shaders are saved to disk
+  
+  **Subsequent Runs:**
+  - Cached shaders load instantly
+  - No stuttering from shader compilation
+  - Smooth gameplay experience
+  
+  **Cache Location:**
+  ```plaintext
+  <RyujinxFolder>/games/<TitleID>/cache/
+  ```
+</Accordion>
+
+<Warning>
+Keep shader caching enabled unless experiencing specific issues. Disabling it will cause significant stuttering.
+</Warning>
+
+### 2. Anti-Aliasing (AA)
+
+Smooth jagged edges for better image quality:
+
+<Tabs>
+  <Tab title="None">
+    **Default** - No anti-aliasing
+    
+    - Best performance
+    - Visible aliasing on edges
+    - Recommended for lower-end GPUs
+  </Tab>
+  
+  <Tab title="FXAA">
+    Fast Approximate Anti-Aliasing
+    
+    - Minimal performance impact
+    - Slight blur to smooth edges
+    - Good balance for most systems
+  </Tab>
+  
+  <Tab title="SMAA">
+    Subpixel Morphological Anti-Aliasing
+    
+    - Better quality than FXAA
+    - Moderate performance impact
+    - Sharper than FXAA with similar smoothing
+    - **Recommended for mid to high-end GPUs**
+  </Tab>
+</Tabs>
+
+```json
+"AntiAliasing": "None"
+```
+
+### 3. Scaling Filters
+
+Improve upscaling quality when using resolution scaling:
+
+<Tabs>
+  <Tab title="Bilinear">
+    **Default** - Simple linear interpolation
+    
+    - Fast and efficient
+    - Slight blur at higher resolutions
+    - Best performance
+  </Tab>
+  
+  <Tab title="Nearest Neighbor">
+    Sharp pixel scaling
+    
+    - No blur
+    - Pixelated appearance
+    - Best for pixel art games
+  </Tab>
+  
+  <Tab title="FSR (FidelityFX Super Resolution)">
+    **AMD FidelityFX Super Resolution**
+    
+    - Advanced upscaling algorithm
+    - Sharpens image while scaling
+    - Adjustable quality level (1-100)
+    - Works on all GPUs (not AMD-exclusive)
+    
+    ```json
+    "ScalingFilter": "Fsr",
+    "ScalingFilterLevel": 80
+    ```
+  </Tab>
+</Tabs>
+
+<Accordion title="FSR Quality Levels">
+  Adjust FSR sharpness with the filter level:
+  
+  - **1-40** - Softer image, more blur reduction
+  - **40-60** - Balanced (default: 80)
+  - **60-100** - Maximum sharpness, may over-sharpen
+  
+  <Note>
+  Higher FSR levels increase sharpness but may introduce visual artifacts. 80 is the recommended default.
+  </Note>
+</Accordion>
+
+### 4. Anisotropic Filtering (AF)
+
+Improve texture quality at oblique angles:
+
+<Tabs>
+  <Tab title="Auto">
+    **Default** - Let games decide
+    
+    ```json
+    "MaxAnisotropy": -1.0
+    ```
+    
+    Uses game's built-in anisotropic filtering settings.
+  </Tab>
+  
+  <Tab title="2x - 16x">
+    Force anisotropic filtering level:
+    
+    - **2x** - Minimal improvement
+    - **4x** - Noticeable quality increase
+    - **8x** - High quality, slight performance cost
+    - **16x** - Maximum quality, minimal performance impact on modern GPUs
+    
+    ```json
+    "MaxAnisotropy": 16.0
+    ```
+  </Tab>
+</Tabs>
+
+<Note>
+Anisotropic filtering has minimal performance impact on modern GPUs. 16x is recommended for best texture quality.
+</Note>
+
+### 5. Aspect Ratio Adjustment
+
+Change the display aspect ratio:
+
+<CardGroup cols={2}>
+  <Card title="Fixed 16:9" icon="tv">
+    **Default** - Native Switch aspect ratio
+    
+    Maintains original 16:9 display.
+  </Card>
+  
+  <Card title="Fixed 21:9" icon="panorama">
+    Ultrawide aspect ratio
+    
+    Stretches image to fit ultrawide monitors. May cause distortion.
+  </Card>
+  
+  <Card title="Fixed 16:10" icon="display">
+    16:10 aspect ratio
+    
+    For 16:10 displays like some laptops.
+  </Card>
+  
+  <Card title="Stretched" icon="expand">
+    Fill entire window
+    
+    Stretches to window size, may distort image.
+  </Card>
+</CardGroup>
+
+```json
+"AspectRatio": "Fixed16x9"
+```
+
+<Warning>
+Changing aspect ratio from 16:9 may cause visual distortion or UI issues in some games.
+</Warning>
+
+### 6. Texture Recompression
+
+Reduce VRAM usage by recompressing textures:
+
+```json
+"EnableTextureRecompression": false
+```
+
+<Accordion title="When to Enable">
+  **Enable if:**
+  - GPU has limited VRAM (4GB or less)
+  - Experiencing out-of-memory errors
+  - Game textures don't fit in VRAM
+  
+  **Disable if:**
+  - GPU has ample VRAM (6GB+)
+  - Want maximum texture quality
+  - Experiencing texture quality issues
+  
+  <Note>
+  Texture recompression trades quality for VRAM savings. Only enable if necessary.
+  </Note>
+</Accordion>
+
+## Advanced Graphics Settings
+
+### Backend Threading
+
+Control GPU driver threading behavior:
+
+<Tabs>
+  <Tab title="Auto">
+    **Recommended** - Automatic threading decision
+    
+    ```json
+    "BackendThreading": "Auto"
+    ```
+    
+    Ryujinx determines optimal threading based on your system.
+  </Tab>
+  
+  <Tab title="On">
+    Force enable threading
+    
+    - Better performance on some systems
+    - May reduce CPU usage
+    - Can cause issues on some drivers
+  </Tab>
+  
+  <Tab title="Off">
+    Force disable threading
+    
+    - Use if experiencing graphics glitches
+    - May reduce performance
+    - Better compatibility
+  </Tab>
+</Tabs>
+
+<Warning>
+Changing backend threading settings can affect stability. Only change from Auto if experiencing specific issues.
+</Warning>
+
+### Macro HLE (High-Level Emulation)
+
+Emulate GPU macros at high level:
+
+```json
+"EnableMacroHLE": true
+```
+
+- **Enabled (default):** Better performance, high compatibility
+- **Disabled:** Accurate macro emulation, slower
+
+<Note>
+Macro HLE is recommended for all users. Disabling it only helps with very specific compatibility issues.
+</Note>
+
+### Color Space Passthrough
+
+**macOS only** - Enable HDR color space passthrough:
+
+```json
+"EnableColorSpacePassthrough": false
+```
+
+Requires macOS and compatible display.
+
+## VSync Configuration
+
+Control frame pacing and screen tearing:
+
+### VSync Modes
+
+<Tabs>
+  <Tab title="Switch (60 FPS)">
+    **Default** - Match Switch's 60 FPS
+    
+    ```json
+    "VSyncMode": "Switch"
+    ```
+    
+    - Locked to 60 FPS
+    - Smooth, consistent frame pacing
+    - Prevents screen tearing
+    - Recommended for most games
+  </Tab>
+  
+  <Tab title="Unbounded (VSync Off)">
+    No frame rate limit
+    
+    ```json
+    "VSyncMode": "Unbounded"
+    ```
+    
+    - Unlocked frame rate
+    - May cause screen tearing
+    - Lower input latency
+    - Use with FreeSync/G-Sync displays
+  </Tab>
+  
+  <Tab title="Custom">
+    Custom frame rate target
+    
+    ```json
+    "VSyncMode": "Custom",
+    "EnableCustomVSyncInterval": true,
+    "CustomVSyncInterval": 120
+    ```
+    
+    - Set any FPS target (30-240)
+    - Useful for high refresh rate displays
+    - Game speed tied to frame rate
+  </Tab>
+</Tabs>
+
+### Custom VSync Interval
+
+For high refresh rate displays:
+
+<Steps>
+  <Step title="Enable Custom VSync">
+    Check **Enable Custom VSync Interval**
+  </Step>
+  
+  <Step title="Set Frame Rate">
+    Adjust the slider or enter a value:
+    
+    - **30 FPS** - Half speed (50% slider)
+    - **60 FPS** - Normal speed (100% slider)
+    - **90 FPS** - 1.5x speed (150% slider)
+    - **120 FPS** - 2x speed (200% slider)
+    - **144 FPS** - 2.4x speed (240% slider)
+  </Step>
+</Steps>
+
+<Warning>
+Custom VSync intervals higher than 60 FPS will speed up game logic. This can cause physics issues, timing problems, and game instability.
+</Warning>
+
+## Shader Dump Path
+
+For debugging or development, dump compiled shaders:
+
+```json
+"GraphicsShadersDumpPath": ""
+```
+
+Leave empty unless specifically debugging shader issues.
+
+## Performance Optimization Tips
+
+<Steps>
+  <Step title="Start with Recommended Settings">
+    - **Backend:** Vulkan
+    - **Resolution Scale:** 2x
+    - **Anti-Aliasing:** None or SMAA
+    - **Scaling Filter:** FSR (level 80)
+    - **Anisotropic Filtering:** 16x
+    - **Shader Cache:** Enabled
+    - **VSync:** Switch (60 FPS)
+  </Step>
+  
+  <Step title="Adjust Based on Performance">
+    **If experiencing low FPS:**
+    - Reduce resolution scale to 1x
+    - Disable anti-aliasing
+    - Use bilinear scaling filter
+    - Reduce anisotropic filtering
+    
+    **If experiencing stuttering:**
+    - Ensure shader cache is enabled
+    - Let shaders build on first playthrough
+    - Check if PPTC is enabled in System settings
+  </Step>
+  
+  <Step title="Monitor GPU Usage">
+    Use GPU monitoring tools to identify bottlenecks:
+    - MSI Afterburner (Windows)
+    - GPU-Z (Windows)
+    - System Monitor (Linux)
+    - Activity Monitor (macOS)
+  </Step>
+</Steps>
+
+## Graphics Debug Levels
+
+For troubleshooting graphics issues:
+
+```json
+"LoggingGraphicsDebugLevel": "None"
+```
+
+Levels:
+- **None** (default) - No debug output
+- **Error** - Only errors
+- **Warning** - Warnings and errors
+- **All** - Verbose logging (performance impact)
+
+<Note>
+Graphics debug logging is for advanced troubleshooting only. Keep at "None" for normal use.
+</Note>
+
+## Troubleshooting Graphics Issues
+
+<Accordion title="Black screen or no graphics">
+  **Solutions:**
+  1. Switch graphics backend (Vulkan ↔ OpenGL)
+  2. Update GPU drivers to latest version
+  3. Verify GPU supports minimum requirements:
+     - OpenGL 4.5+ or Vulkan 1.2+
+  4. Check if GPU is selected correctly (multi-GPU systems)
+  5. Disable any overlays (Discord, MSI Afterburner, etc.)
+</Accordion>
+
+<Accordion title="Low FPS or stuttering">
+  **Performance optimization:**
+  1. Reduce resolution scale to 1x or 2x
+  2. Disable anti-aliasing
+  3. Ensure shader cache is enabled
+  4. Enable PPTC in System settings
+  5. Close background applications
+  6. Use Vulkan backend if available
+  7. Lower graphics settings in-game
+</Accordion>
+
+<Accordion title="Graphics glitches or artifacts">
+  **Common causes:**
+  - Outdated GPU drivers
+  - Incompatible backend threading
+  - GPU overheating or instability
+  
+  **Solutions:**
+  1. Update GPU drivers
+  2. Set backend threading to Auto
+  3. Try different graphics backend
+  4. Reduce GPU overclock if applicable
+  5. Check GPU temperatures
+  6. Enable/disable Macro HLE
+</Accordion>
+
+<Accordion title="Screen tearing">
+  **Solutions:**
+  1. Ensure VSync is set to "Switch"
+  2. Enable VSync in GPU driver settings
+  3. Use windowed mode instead of fullscreen
+  4. Enable FreeSync/G-Sync on compatible displays
+</Accordion>
+
+<Accordion title="Shader compilation stuttering">
+  **Expected behavior:**
+  - First time playing a game will stutter as shaders compile
+  - Shaders are cached after compilation
+  - Subsequent runs will be smooth
+  
+  **To minimize:**
+  1. Keep shader cache enabled
+  2. Play through stuttering areas once to build cache
+  3. Consider downloading pre-compiled shader caches (user-shared)
+</Accordion>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Audio Settings" icon="volume" href="/user-guide/audio-settings">
+    Configure audio backend and volume settings
+  </Card>
+  <Card title="Configuration" icon="gear" href="/user-guide/configuration">
+    Adjust system and emulator settings
+  </Card>
+  <Card title="Input Configuration" icon="gamepad" href="/user-guide/input-configuration">
+    Set up controllers and keyboard input
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/user-guide/troubleshooting">
+    Diagnose and fix common issues
+  </Card>
+</CardGroup>

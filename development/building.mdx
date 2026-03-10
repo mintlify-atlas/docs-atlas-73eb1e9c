@@ -1,0 +1,336 @@
+---
+title: Building Ryujinx
+description: Learn how to compile Ryujinx from source code
+icon: hammer
+---
+
+## Overview
+
+Building Ryujinx from source is intended for developers who want to contribute code. If you just want to use the emulator, download pre-built releases instead.
+
+<Warning>
+This guide is for contributors only. Regular users should download official builds from the releases page.
+</Warning>
+
+## Prerequisites
+
+### Install .NET SDK
+
+<Steps>
+  <Step title="Download .NET 10.0 SDK">
+    Install the [.NET 10.0 (or higher) SDK](https://dotnet.microsoft.com/en-us/download/dotnet/10.0)
+  </Step>
+  
+  <Step title="Verify SDK version">
+    Your SDK version must meet or exceed the version specified in `global.json`:
+    
+    ```json global.json
+    {
+      "sdk": {
+        "version": "10.0.100",
+        "rollForward": "latestFeature"
+      }
+    }
+    ```
+  </Step>
+  
+  <Step title="Confirm installation">
+    ```bash
+    dotnet --version
+    ```
+    Should output version 10.0.100 or higher
+  </Step>
+</Steps>
+
+## Get the Source Code
+
+Choose one of these methods:
+
+<Tabs>
+  <Tab title="Git Clone (Recommended)">
+    ```bash
+    git clone https://git.ryujinx.app/ryubing/ryujinx.git
+    cd ryujinx
+    ```
+  </Tab>
+  
+  <Tab title="Download ZIP">
+    1. Click **Code → Download ZIP** on GitHub
+    2. Extract the archive
+    3. Navigate to the extracted folder
+  </Tab>
+</Tabs>
+
+## Building the Project
+
+### Quick Build
+
+From the project root directory:
+
+```bash
+dotnet build -c Release -o build
+```
+
+<Note>
+Built files will be created in the `build/` directory.
+</Note>
+
+### Build Configuration Options
+
+<CodeGroup>
+
+```bash Debug Build
+# Build with debugging symbols
+dotnet build -c Debug -o build
+```
+
+```bash Release Build
+# Optimized build for production
+dotnet build -c Release -o build
+```
+
+```bash Specific Platform
+# Build for a specific runtime
+dotnet build -c Release -r win-x64 -o build
+```
+
+</CodeGroup>
+
+### Platform Access on Windows
+
+<Tip>
+On Windows, you can quickly open a command prompt in File Explorer:
+1. Hold **Shift** and right-click in the folder
+2. Select **"Open command window here"** or **"Open PowerShell window here"**
+</Tip>
+
+## Publishing Ryujinx
+
+For a self-contained executable:
+
+<Tabs>
+  <Tab title="Windows x64">
+    ```bash
+    dotnet publish -c Release -r win-x64 -o publish src/Ryujinx --self-contained
+    ```
+  </Tab>
+  
+  <Tab title="Linux x64">
+    ```bash
+    dotnet publish -c Release -r linux-x64 -o publish src/Ryujinx --self-contained
+    ```
+  </Tab>
+  
+  <Tab title="macOS Universal">
+    ```bash
+    dotnet publish -c Release -r osx-x64 -o publish src/Ryujinx --self-contained
+    ```
+  </Tab>
+  
+  <Tab title="Linux ARM64">
+    ```bash
+    dotnet publish -c Release -r linux-arm64 -o publish src/Ryujinx --self-contained
+    ```
+  </Tab>
+</Tabs>
+
+<Note>
+Self-contained builds include the .NET runtime, making them larger but not requiring .NET SDK installation on the target system.
+</Note>
+
+## CI Build Commands
+
+The GitHub Actions CI uses these commands (from `.github/workflows/build.yml:54`):
+
+```bash Build
+dotnet build -c Release -p:Version="1.2.0" -p:SourceRevisionId="abc1234" -p:ExtraDefineConstants=DISABLE_UPDATER
+```
+
+```bash Test
+dotnet test --no-build -c Release
+```
+
+```bash Publish
+dotnet publish -c Release -r win-x64 -o ./publish \
+  -p:Version="1.2.0" \
+  -p:DebugType=embedded \
+  -p:SourceRevisionId="abc1234" \
+  -p:ExtraDefineConstants=DISABLE_UPDATER \
+  src/Ryujinx --self-contained
+```
+
+## System Files Location
+
+After building, Ryujinx stores its system files in the user folder:
+
+<AccordionGroup>
+  <Accordion title="Windows">
+    ```
+    C:\Users\<YourUsername>\AppData\Roaming\Ryujinx
+    ```
+    
+    Access via: **File → Open Ryujinx Folder** in the GUI
+  </Accordion>
+  
+  <Accordion title="Linux">
+    ```
+    ~/.config/Ryujinx
+    ```
+    or
+    ```
+    ~/.local/share/Ryujinx
+    ```
+  </Accordion>
+  
+  <Accordion title="macOS">
+    ```
+    ~/Library/Application Support/Ryujinx
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Supported Platforms
+
+Ryujinx builds for multiple platforms (from `.github/workflows/build.yml:21-25`):
+
+| Platform | Runtime ID | OS Runner |
+|----------|-----------|----------|
+| Windows x64 | `win-x64` | windows-latest |
+| Windows ARM64 | `win-arm64` | windows-latest |
+| Linux x64 | `linux-x64` | ubuntu-latest |
+| Linux ARM64 | `linux-arm64` | ubuntu-latest |
+| macOS x64 | `osx-x64` | macos-13 |
+| macOS Universal | `osx-universal` | Custom build |
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="SDK version mismatch">
+    **Error**: The current .NET SDK does not support targeting .NET 10.0
+    
+    **Solution**: Install .NET 10.0 SDK or higher. Verify with:
+    ```bash
+    dotnet --list-sdks
+    ```
+  </Accordion>
+  
+  <Accordion title="Build errors after git pull">
+    **Solution**: Clean and rebuild:
+    ```bash
+    dotnet clean
+    dotnet build -c Release
+    ```
+  </Accordion>
+  
+  <Accordion title="Missing dependencies">
+    **Solution**: Restore NuGet packages:
+    ```bash
+    dotnet restore
+    dotnet build -c Release
+    ```
+  </Accordion>
+  
+  <Accordion title="Platform-specific build failures">
+    **Linux**: Install required dependencies:
+    ```bash
+    sudo apt-get install -y libx11-dev libxrandr-dev
+    ```
+    
+    **macOS**: Install Xcode Command Line Tools:
+    ```bash
+    xcode-select --install
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Build Performance Tips
+
+<Tip>
+**Use parallel builds** for faster compilation:
+```bash
+dotnet build -c Release -m:8
+```
+Replace `8` with your CPU core count.
+</Tip>
+
+<Tip>
+**Incremental builds** are faster - only rebuild changed files:
+```bash
+dotnet build -c Release --no-restore
+```
+</Tip>
+
+## IDE Setup
+
+### Visual Studio (Windows)
+
+<Steps>
+  <Step title="Install Visual Studio 2022">
+    Download [Visual Studio 2022](https://visualstudio.microsoft.com/) or later
+  </Step>
+  
+  <Step title="Install .NET workload">
+    Select the **.NET desktop development** workload during installation
+  </Step>
+  
+  <Step title="Open solution">
+    Open `Ryujinx.sln` in Visual Studio
+  </Step>
+  
+  <Step title="Build">
+    Press **F6** or select **Build → Build Solution**
+  </Step>
+</Steps>
+
+### Visual Studio Code (Cross-platform)
+
+<Steps>
+  <Step title="Install VS Code">
+    Download [Visual Studio Code](https://code.visualstudio.com/)
+  </Step>
+  
+  <Step title="Install C# extension">
+    Install the [C# Dev Kit](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csdevkit) extension
+  </Step>
+  
+  <Step title="Open folder">
+    Open the Ryujinx repository folder
+  </Step>
+  
+  <Step title="Build from terminal">
+    Use the integrated terminal:
+    ```bash
+    dotnet build -c Release
+    ```
+  </Step>
+</Steps>
+
+### Rider (Cross-platform)
+
+<Steps>
+  <Step title="Install JetBrains Rider">
+    Download [JetBrains Rider](https://www.jetbrains.com/rider/)
+  </Step>
+  
+  <Step title="Open solution">
+    Open `Ryujinx.sln`
+  </Step>
+  
+  <Step title="Build">
+    Press **Ctrl+Shift+F9** or select **Build → Build Solution**
+  </Step>
+</Steps>
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="Coding Style" icon="paintbrush" href="/development/coding-style">
+    Learn Ryujinx's C# conventions
+  </Card>
+  <Card title="Debugging" icon="bug" href="/development/debugging">
+    Set up debugging tools
+  </Card>
+  <Card title="Testing" icon="flask" href="/development/testing">
+    Run and write tests
+  </Card>
+</CardGroup>

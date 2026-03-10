@@ -1,0 +1,174 @@
+---
+title: CPU Emulation
+description: Learn about Ryujinx's ARMeilleure JIT compiler and ARMv8 CPU emulation
+icon: microchip
+---
+
+Ryujinx uses **ARMeilleure**, a custom Just-In-Time (JIT) compiler that emulates the Nintendo Switch's ARMv8 CPU architecture. This sophisticated translation engine converts ARM instructions to x86 or ARM64 code on your host system.
+
+## ARMeilleure JIT Compiler
+
+ARMeilleure (ARM + "meilleure," French for "better") is the heart of Ryujinx's CPU emulation, providing high-performance translation of ARM code to native instructions.
+
+<CardGroup cols={2}>
+  <Card title="ARMv8 Support" icon="code">
+    Full support for 64-bit ARMv8 instructions with partial 32-bit ARMv7 compatibility
+  </Card>
+  <Card title="Custom IR" icon="diagram-project">
+    Translates ARM code to an intermediate representation for optimization
+  </Card>
+  <Card title="x86/ARM64 Output" icon="arrows-rotate">
+    Generates optimized native code for x86-64 and ARM64 host systems
+  </Card>
+  <Card title="Hardware Extensions" icon="bolt">
+    Leverages SSE, AVX, AVX-512, and ARM NEON for maximum performance
+  </Card>
+</CardGroup>
+
+## Translation Process
+
+The ARMeilleure compiler follows a multi-stage translation pipeline:
+
+### 1. Instruction Decoding
+
+ARM instructions from the game are decoded into an internal representation. ARMeilleure supports:
+- Most 64-bit ARMv8 instructions
+- Partial 32-bit ARMv7 and older instruction sets
+- SIMD/NEON vector instructions
+- Cryptographic extensions (AES, SHA)
+
+### 2. Intermediate Representation (IR)
+
+Decoded instructions are converted to a custom IR that:
+- Abstracts away ARM-specific details
+- Enables cross-platform optimization
+- Simplifies register allocation
+- Facilitates SSA (Static Single Assignment) analysis
+
+### 3. Optimization Passes
+
+The IR undergoes multiple optimization passes:
+
+<Note>
+Optimizations are performed at the IR level before native code generation, including constant folding, dead code elimination, and instruction combining.
+</Note>
+
+**Key optimizations:**
+- **Constant Folding**: Evaluates constant expressions at compile time
+- **SSA Construction**: Enables advanced data flow analysis
+- **Fast FP Math**: Faster floating-point operations when enabled
+- **Hardware Intrinsics**: Uses host CPU SIMD instructions directly
+
+### 4. Native Code Generation
+
+The optimized IR is compiled to native machine code:
+
+```csharp
+// From CodeGenerator.cs
+public static CompiledFunction Generate(CompilerContext cctx)
+{
+    ControlFlowGraph cfg = cctx.Cfg;
+    // Register allocation, instruction selection,
+    // and native code emission...
+}
+```
+
+## Memory Management Options
+
+Ryujinx offers multiple memory manager configurations to balance performance and compatibility:
+
+<CardGroup cols={3}>
+  <Card title="Host Unchecked" icon="rocket">
+    **Fastest** - Direct host memory mapping without bounds checking
+  </Card>
+  <Card title="Host Mapped" icon="gauge-high">
+    **Fast** - Host memory mapping with safety bounds checking
+  </Card>
+  <Card title="Software MMU" icon="shield">
+    **Safest** - Full software memory management for maximum compatibility
+  </Card>
+</CardGroup>
+
+<Info>
+The default **Host Unchecked** mode provides the best performance for most games. Switch to Software MMU only if you encounter compatibility issues.
+</Info>
+
+## Hardware Capabilities
+
+ARMeilleure automatically detects and utilizes available CPU extensions:
+
+### x86-64 Extensions
+
+| Extension | Purpose |
+|-----------|----------|
+| **SSE/SSE2/SSE3** | Basic SIMD operations |
+| **SSSE3/SSE4.1/SSE4.2** | Enhanced vector processing |
+| **AVX/AVX2** | 256-bit vector operations |
+| **AVX-512** | 512-bit vectors for maximum throughput |
+| **AES-NI** | Hardware-accelerated encryption |
+| **PCLMULQDQ** | Cryptographic operations |
+| **FMA** | Fused multiply-add for better precision |
+| **F16C** | Half-precision floating-point |
+
+### ARM64 Extensions
+
+| Extension | Purpose |
+|-----------|----------|
+| **AdvSIMD (NEON)** | Vector operations |
+| **AES** | Cryptographic acceleration |
+| **PMULL** | Polynomial multiplication |
+
+<Note>
+All optimizations can be individually toggled in the `Optimizations.cs` configuration, though the defaults provide the best balance.
+</Note>
+
+## Background Translation
+
+Ryujinx uses multiple background threads to translate code ahead of execution:
+
+- **Dynamic thread count**: Automatically adjusts based on CPU core count
+- **Priority scheduling**: High-quality compilation runs at lower priority to avoid frame drops
+- **Rejit queue**: Functions are re-translated with higher optimization levels after profiling
+
+```csharp
+// From Translator.cs
+int unboundedThreadCount = Math.Max(1, (Environment.ProcessorCount - 6) / 3);
+int threadCount = Math.Min(4, unboundedThreadCount);
+```
+
+## Translation Cache
+
+Translated functions are cached in memory for instant reuse:
+
+- **JIT Cache**: Native code is stored in executable memory pages
+- **Function Table**: Fast lookup table for translated addresses
+- **Count Table**: Tracks function execution frequency for optimization decisions
+
+<Card title="Persistent Translation Cache" icon="floppy-disk" href="/features/ptc">
+  Learn how PTC saves translations to disk for faster subsequent launches
+</Card>
+
+## Performance Characteristics
+
+<CardGroup cols={2}>
+  <Card title="First Run" icon="hourglass-start">
+    Initial execution includes translation overhead as code is compiled on-demand
+  </Card>
+  <Card title="Steady State" icon="gauge-simple-high">
+    After warm-up, translated code runs at near-native speeds with minimal overhead
+  </Card>
+</CardGroup>
+
+## Technical Details
+
+For developers and enthusiasts:
+
+- **Source location**: `src/ARMeilleure/`
+- **Translation engine**: `Translation/Translator.cs`
+- **Code generation**: `CodeGen/X86/` and `CodeGen/Arm64/`
+- **Optimizations**: `Optimizations.cs`
+- **Memory managers**: `Memory/MemoryManagerType.cs`
+
+<Info>
+ARMeilleure is one of the most sophisticated open-source JIT compilers for ARM emulation, rivaling commercial solutions in both performance and compatibility.
+</Info>

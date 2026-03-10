@@ -1,0 +1,576 @@
+---
+title: C# Coding Style
+description: Code style guidelines and conventions for Ryujinx development
+icon: paintbrush
+---
+
+## Overview
+
+The general rule: **"use Visual Studio defaults"**. Using an IDE that supports the `.editorconfig` standard makes following these guidelines automatic.
+
+<Note>
+An [EditorConfig](https://editorconfig.org) file (`.editorconfig`) is provided at the repository root for automatic C# formatting.
+</Note>
+
+## Core Principles
+
+### Brace Style
+
+<CodeGroup>
+
+```csharp Allman Style (Correct)
+if (condition)
+{
+    DoSomething();
+}
+
+if (x > 0)
+{
+    Positive();
+}
+else
+{
+    Negative();
+}
+```
+
+```csharp K&R Style (Incorrect)
+if (condition) {
+    DoSomething();
+}
+```
+
+</CodeGroup>
+
+**Rule 1**: Use [Allman style](http://en.wikipedia.org/wiki/Indent_style#Allman_style) braces - each brace begins on a new line.
+
+### Single-Line Statement Blocks
+
+Single-line statement blocks can omit braces, but must:
+- Be properly indented on its own line
+- Not be nested in other statement blocks with braces
+
+```csharp
+if (condition)
+    DoSomething();
+
+// Exception: nested using statements
+using (var resource1 = GetResource())
+using (var resource2 = GetResource())
+{
+    UseResources(resource1, resource2);
+}
+```
+
+## Indentation and Spacing
+
+**Rule 2**: Use **four spaces** for indentation (no tabs).
+
+```csharp
+public class Example
+{
+    public void Method()
+    {
+        if (condition)
+        {
+            DoSomething();
+        }
+    }
+}
+```
+
+**Rule 7**: Avoid more than one empty line at any time.
+
+**Rule 8**: Avoid spurious free spaces.
+
+```csharp Good
+if (someVar == 0)
+```
+
+```csharp Bad - spurious spaces
+if (someVar == 0)···
+```
+
+<Tip>
+Enable "View White Space" in Visual Studio (**Ctrl+R, Ctrl+W**) to detect trailing spaces.
+</Tip>
+
+## Naming Conventions
+
+### Fields
+
+**Rule 3**: Use `_camelCase` for internal and private fields with `readonly` where possible.
+
+<CodeGroup>
+
+```csharp Instance Fields
+private readonly string _name;
+private int _count;
+```
+
+```csharp Static Fields
+private static readonly string s_defaultName;
+private static int s_instanceCount;
+```
+
+```csharp Thread-Static Fields
+[ThreadStatic]
+private static string t_threadName;
+```
+
+```csharp Public Fields
+public string Name; // Use sparingly
+public int Count;
+```
+
+</CodeGroup>
+
+| Field Type | Prefix | Example |
+|-----------|--------|----------|
+| Private/Internal instance | `_` | `_camelCase` |
+| Static | `s_` | `s_camelCase` |
+| Thread-static | `t_` | `t_camelCase` |
+| Public | none | `PascalCase` |
+
+### Visibility Modifiers
+
+**Rule 5**: Always specify visibility, even if it's the default. Visibility should be the first modifier.
+
+```csharp Correct
+private string _foo;
+public abstract class MyClass;
+public static readonly int MaxValue = 100;
+```
+
+```csharp Incorrect
+string _foo; // Missing visibility
+abstract public class MyClass; // Wrong order
+readonly static int MaxValue = 100; // Wrong order
+```
+
+## Language Features
+
+### The `this.` Keyword
+
+**Rule 4**: Avoid `this.` unless absolutely necessary.
+
+```csharp Good
+public void SetName(string name)
+{
+    _name = name;
+}
+```
+
+```csharp Only when needed
+public void SetName(string name)
+{
+    this.name = name; // Only if there's a public property called 'name'
+}
+```
+
+### The `var` Keyword
+
+**Rule 10**: Use `var` only when the type is explicitly named on the right-hand side.
+
+<CodeGroup>
+
+```csharp Allowed
+var stream = new FileStream("file.txt", FileMode.Open);
+var count = (int)GetCount();
+var items = new List<string>();
+```
+
+```csharp Not Allowed
+var stream = OpenStandardInput(); // Type not obvious
+var count = GetCount(); // Type not obvious
+```
+
+</CodeGroup>
+
+### Target-Typed `new()`
+
+**Rule 10**: Target-typed `new()` can only be used when type is explicitly named on the left-hand side in a definition statement.
+
+```csharp Correct
+FileStream stream = new("file.txt", FileMode.Open);
+List<string> items = new();
+```
+
+```csharp Incorrect
+stream = new("file.txt", FileMode.Open); // Type specified on previous line
+```
+
+### Language Keywords vs BCL Types
+
+**Rule 11**: Use language keywords instead of BCL types.
+
+```csharp Correct
+int count = 0;
+string name = "Ryujinx";
+float value = 3.14f;
+int parsed = int.Parse("42");
+```
+
+```csharp Incorrect
+Int32 count = 0;
+String name = "Ryujinx";
+Single value = 3.14f;
+Int32 parsed = Int32.Parse("42");
+```
+
+## Naming and Documentation
+
+### Method Names
+
+**Rule 13**: Use PascalCasing for all method names, including local functions.
+
+```csharp
+public void ProcessData()
+{
+    void LocalHelper(int value)
+    {
+        // Local function
+    }
+    
+    LocalHelper(42);
+}
+```
+
+### Constants
+
+**Rule 12**: Use PascalCasing for all constant variables and fields.
+
+```csharp
+private const int MaxRetries = 3;
+public const string DefaultName = "Ryujinx";
+
+void Method()
+{
+    const int BufferSize = 1024;
+}
+```
+
+<Note>
+**Exception**: Interop code constants should match the exact name and value of the external API.
+</Note>
+
+### `nameof()` Usage
+
+**Rule 14**: Use `nameof(...)` instead of `"..."` whenever possible.
+
+```csharp Good
+if (value == null)
+    throw new ArgumentNullException(nameof(value));
+
+PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Name)));
+```
+
+```csharp Avoid
+if (value == null)
+    throw new ArgumentNullException("value");
+```
+
+## Code Organization
+
+### Namespace Imports
+
+**Rule 6**: Namespace imports should be at the top of the file, **outside** of `namespace` declarations.
+
+```csharp Correct
+using System;
+using System.Collections.Generic;
+using Ryujinx.Common;
+
+namespace Ryujinx.Graphics.Gpu.Shader
+{
+    public class ShaderCache
+    {
+    }
+}
+```
+
+### Field Placement
+
+**Rule 15**: Fields should be specified at the top within type declarations.
+
+```csharp
+public class Example
+{
+    private readonly int _capacity;
+    private static readonly string s_version = "1.0";
+    
+    public Example(int capacity)
+    {
+        _capacity = capacity;
+    }
+    
+    public void Process()
+    {
+    }
+}
+```
+
+## Control Flow
+
+### Single-Statement `if`
+
+**Rule 18**: When using a single-statement if:
+
+<Tabs>
+  <Tab title="Never">
+    ```csharp
+    // Never use single-line form
+    if (source == null) throw new ArgumentNullException("source");
+    ```
+  </Tab>
+  
+  <Tab title="Braces Required">
+    ```csharp
+    // Required if any block uses braces
+    if (x > 0)
+    {
+        Positive();
+    }
+    else
+    {
+        Negative();
+    }
+    
+    // Required if body spans multiple lines
+    if (condition)
+    {
+        SomeMethod(
+            longParameter,
+            anotherParameter);
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Braces Optional">
+    ```csharp
+    // Can omit braces if all blocks are single-line
+    if (x > 0)
+        Positive();
+    else if (x < 0)
+        Negative();
+    else
+        Zero();
+    ```
+  </Tab>
+</Tabs>
+
+### Labels and `goto`
+
+**Rule 17**: When using labels, indent one less than the current indentation.
+
+```csharp
+void Method()
+{
+    if (condition)
+    {
+    retry:
+        if (TryOperation())
+            return;
+        
+        if (ShouldRetry())
+            goto retry;
+    }
+}
+```
+
+## Special Rules
+
+### File-Specific Styles
+
+**Rule 9**: If a file differs from these guidelines, the existing style in that file takes precedence.
+
+```csharp
+// If this file uses m_member instead of _member,
+// continue using m_member for consistency
+private int m_count;
+```
+
+### Type Design
+
+**Rule 19**: Make internal and private types `static` or `sealed` unless derivation is required.
+
+```csharp
+internal sealed class HelperClass
+{
+}
+
+private static class Constants
+{
+}
+```
+
+### XML Documentation
+
+**Rule 20**: Use XML docs for:
+- Interfaces
+- Classes/methods with sufficient scope or complexity
+
+```csharp
+/// <summary>
+/// Memory cache of shader code.
+/// </summary>
+class ShaderCache : IDisposable
+{
+    /// <summary>
+    /// Default flags used on the shader translation process.
+    /// </summary>
+    public const TranslationFlags DefaultFlags = TranslationFlags.DebugMode;
+}
+```
+
+### Magic Numbers
+
+**Rule 21**: Define [magic numbers](https://en.wikipedia.org/wiki/Magic_number_(programming)) as named constants.
+
+```csharp Good
+private const int CurrentAge = 56;
+private const int RetireAge = 68;
+
+for (int i = CurrentAge; i < RetireAge; i++)
+{
+}
+```
+
+```csharp Avoid
+for (int i = 56; i < 68; i++) // What do these numbers mean?
+{
+}
+```
+
+<Note>
+This may be ignored for trivial or syntactically common statements.
+</Note>
+
+### Non-ASCII Characters
+
+**Rule 16**: Use Unicode escape sequences (`\uXXXX`) instead of literal non-ASCII characters.
+
+```csharp Correct
+string copyright = "\u00A9 2024 Ryujinx";
+```
+
+```csharp Avoid
+string copyright = "© 2024 Ryujinx"; // May get garbled
+```
+
+## Complete Example
+
+From `src/Ryujinx.Graphics.Gpu/Shader/ShaderCache.cs`:
+
+```csharp
+using Ryujinx.Common.Configuration;
+using Ryujinx.Common.Logging;
+using Ryujinx.Graphics.GAL;
+using Ryujinx.Graphics.Gpu.Engine.Threed;
+using Ryujinx.Graphics.Gpu.Engine.Types;
+using Ryujinx.Graphics.Gpu.Image;
+using Ryujinx.Graphics.Gpu.Memory;
+using Ryujinx.Graphics.Gpu.Shader.DiskCache;
+using Ryujinx.Graphics.Shader;
+using Ryujinx.Graphics.Shader.Translation;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading;
+
+namespace Ryujinx.Graphics.Gpu.Shader
+{
+    /// <summary>
+    /// Memory cache of shader code.
+    /// </summary>
+    class ShaderCache : IDisposable
+    {
+        /// <summary>
+        /// Default flags used on the shader translation process.
+        /// </summary>
+        public const TranslationFlags DefaultFlags = TranslationFlags.DebugMode;
+
+        private readonly struct TranslatedShader
+        {
+            public readonly CachedShaderStage Shader;
+            public readonly ShaderProgram Program;
+
+            public TranslatedShader(CachedShaderStage shader, ShaderProgram program)
+            {
+                Shader = shader;
+                Program = program;
+            }
+        }
+        
+        /// <summary>
+        /// Processes the queue of shaders that must save their binaries to the disk cache.
+        /// </summary>
+        public void ProcessShaderCacheQueue()
+        {
+            // Check to see if the binaries for previously compiled shaders are ready, and save them out.
+
+            while (_programsToSaveQueue.TryPeek(out ProgramToSave programToSave))
+            {
+                ProgramLinkStatus result = programToSave.HostProgram.CheckProgramLink(false);
+
+                if (result != ProgramLinkStatus.Incomplete)
+                {
+                    if (result == ProgramLinkStatus.Success)
+                    {
+                        _cacheWriter.AddShader(programToSave.CachedProgram, programToSave.BinaryCode ?? programToSave.HostProgram.GetBinary());
+                    }
+
+                    _programsToSaveQueue.Dequeue();
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
+    }
+}
+```
+
+## Enforcement Tools
+
+### EditorConfig
+
+The `.editorconfig` file at the repository root automatically enforces many of these rules in compatible IDEs.
+
+### dotnet format
+
+Run before committing:
+
+```bash
+dotnet format
+```
+
+This tool automatically fixes style violations.
+
+<Warning>
+All PRs must pass `dotnet format` checks in CI. Run this locally before pushing.
+</Warning>
+
+## IDE Support
+
+| IDE | EditorConfig Support |
+|-----|---------------------|
+| Visual Studio 2022+ | Built-in |
+| Visual Studio Code | [Extension required](https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig) |
+| JetBrains Rider | Built-in |
+| Visual Studio for Mac | Built-in |
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="PR Guide" icon="git-pull-request" href="/development/pr-guide">
+    Submit your first pull request
+  </Card>
+  <Card title="Testing" icon="flask" href="/development/testing">
+    Write unit tests
+  </Card>
+  <Card title="Building" icon="hammer" href="/development/building">
+    Build Ryujinx from source
+  </Card>
+</CardGroup>

@@ -1,0 +1,712 @@
+---
+title: 'High-Level Emulation (HLE)'
+description: 'Understanding Ryujinx HLE: Horizon OS emulation, service implementation, IPC mechanism, and system call handling'
+icon: 'layer-group'
+---
+
+## Overview
+
+Ryujinx uses **High-Level Emulation (HLE)** to simulate Nintendo Switch system services and the Horizon operating system. Instead of emulating the entire OS at the binary level, HLE reimplements OS functionality in C#, providing:
+
+<CardGroup cols={3}>
+<Card title="Performance" icon="bolt">
+Direct C# implementations are faster than emulating ARM OS code
+</Card>
+
+<Card title="Compatibility" icon="shield-check">
+Handles version differences and missing firmware gracefully
+</Card>
+
+<Card title="Features" icon="sparkles">
+Enhanced functionality beyond real hardware (save states, cheats, mods)
+</Card>
+</CardGroup>
+
+## Horizon OS Emulation
+
+### System Architecture
+
+The `Horizon` class (`src/Ryujinx.HLE/HOS/Horizon.cs`) is the core OS emulator:
+
+```csharp
+public class Horizon : IDisposable
+{
+    internal KernelContext KernelContext { get; }
+    internal Switch Device { get; private set; }
+    internal ITickSource TickSource { get; }
+    internal SurfaceFlinger SurfaceFlinger { get; private set; }
+    
+    public SystemStateMgr State { get; private set; }
+    internal AppletStateMgr AppletState { get; private set; }
+    internal SmRegistry SmRegistry { get; private set; }
+    
+    // System servers
+    internal ServerBase SmServer { get; private set; }      // Service manager
+    internal ServerBase FsServer { get; private set; }      // Filesystem
+    internal ServerBase HidServer { get; private set; }     // Human interface devices
+    internal ServerBase NvDrvServer { get; private set; }   // NVIDIA driver
+    internal ServerBase TimeServer { get; private set; }    // Time services
+    internal ServerBase ViServer { get; private set; }      // Visual/display
+    
+    // Shared memory regions
+    internal KSharedMemory HidSharedMem { get; private set; }
+    internal KSharedMemory FontSharedMem { get; private set; }
+    internal KSharedMemory IirsSharedMem { get; private set; }
+}
+```
+
+**Key components:**
+
+<AccordionGroup>
+<Accordion title="Kernel Context" icon="kernel">
+Emulates Horizon kernel primitives:
+- Process/thread management
+- Memory management (virtual memory, page tables)
+- Synchronization objects (mutexes, events, semaphores)
+- Inter-process communication
+</Accordion>
+
+<Accordion title="System Servers" icon="server">
+Background threads handling service requests:
+```csharp
+// Each server processes IPC messages on dedicated thread
+SmServer = new ServerBase(KernelContext, "SmServer");
+FsServer = new ServerBase(KernelContext, "FsServer");
+HidServer = new ServerBase(KernelContext, "HidServer");
+```
+</Accordion>
+
+<Accordion title="Shared Memory" icon="memory">
+Direct memory sharing between guest and services:
+```csharp
+// HID shared memory for controller input (256 KB)
+HidSharedMem = CreateSharedMemory(hidPa, HidSize);
+
+// Font shared memory for text rendering (17 MB)
+FontSharedMem = CreateSharedMemory(fontPa, FontSize);
+```
+</Accordion>
+</AccordionGroup>
+
+## Service Implementation
+
+### Service Manager (sm)
+
+The Service Manager is the cornerstone of Horizon's service architecture:
+
+```csharp
+public class SmRegistry
+{
+    private readonly Dictionary<string, Func<ServiceCtx, IpcService>> _services = new();
+    
+    public void RegisterService(string name, Func<ServiceCtx, IpcService> factory)
+    {
+        _services[name] = factory;
+    }
+    
+    public IpcService GetService(ServiceCtx context, string name)
+    {
+        if (_services.TryGetValue(name, out var factory))
+        {
+            return factory(context);
+        }
+        return null;
+    }
+}
+```
+
+**Common services:**
+
+<Tabs>
+<Tab title="System Services">
+```csharp
+// Core system functionality
+"acc:u0"     // Account services
+"am:u"       // Applet manager
+"apm"        // Application performance management
+"fsp-srv"    // Filesystem
+"hid"        // Human interface devices
+"irs"        // IR sensor
+"lm"         // Logging
+"nifm:u"     // Network interface
+"ns:u"       // Nintendo Shell
+"nv!nvdrv"   // NVIDIA driver
+"pctl:u"     // Parental controls
+"pl:u"       // Shared fonts
+"set:sys"    // System settings
+"time:u"     // Time services
+"vi:u"       // Visual/display
+```
+</Tab>
+
+<Tab title="Audio Services">
+```csharp
+"audren:u"   // Audio renderer
+"audout:u"   // Audio output
+"audin:u"    // Audio input
+"audctl"     // Audio control
+"audrec:u"   // Audio recording
+"hwopus"     // Hardware Opus codec
+```
+</Tab>
+
+<Tab title="Network Services">
+```csharp
+"bsd:u"      // Berkeley socket
+"nsd:u"      // Network service discovery
+"sfdnsres"   // DNS resolver
+"ldn:u"      // Local network
+```
+</Tab>
+
+<Tab title="Other Services">
+```csharp
+"btm"        // Bluetooth
+"caps:u"     // Capture (screenshots)
+"friend:u"   // Friend services
+"nfc:u"      // NFC/Amiibo
+"ssl"        // Secure sockets
+```
+</Tab>
+</Tabs>
+
+### IPC (Inter-Process Communication)
+
+Ryujinx implements the Horizon IPC protocol for service communication:
+
+#### IPC Message Structure
+
+```csharp
+// From src/Ryujinx.HLE/HOS/Ipc/IpcMessage.cs
+public class IpcMessage
+{
+    public IpcMessageType Type { get; set; }
+    
+    public List<IpcBuffDesc> BuffDescs { get; }           // Buffer descriptors
+    public List<IpcPtrBuffDesc> PtrBuffDescs { get; }     // Pointer buffers
+    public List<IpcRecvListBuffDesc> RecvListBuffs { get; } // Receive lists
+    
+    public List<int> ObjectIds { get; }                   // Domain object IDs
+    public IpcHandleDesc HandleDesc { get; set; }         // Handle transfer
+    
+    public byte[] RawData { get; set; }                   // Command data
+}
+```
+
+**Message types:**
+
+<CodeGroup>
+```csharp Request
+public enum IpcMessageType
+{
+    Request          = 4,  // Standard service request
+    Control          = 5,  // Control commands (convert to domain, etc.)
+    CloseSession     = 6,  // Close service session
+    RequestWithContext = 8 // Request with additional context
+}
+```
+
+```csharp Response
+public enum IpcMagic : uint
+{
+    Sfci = 0x49434653,  // "SFCI" - Response magic
+    Sfco = 0x4F434653,  // "SFCO" - Control response
+}
+```
+</CodeGroup>
+
+#### IPC Service Handler
+
+Base class for all service implementations:
+
+```csharp
+// From src/Ryujinx.HLE/HOS/Services/IpcService.cs
+abstract class IpcService
+{
+    public IReadOnlyDictionary<int, MethodInfo> CmifCommands { get; }
+    public IReadOnlyDictionary<int, MethodInfo> TipcCommands { get; }
+    
+    public IpcService(ServerBase server = null, bool registerTipc = false)
+    {
+        // Reflect and cache all [CommandCmif] and [CommandTipc] methods
+        CmifCommands = GetType()
+            .GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public)
+            .SelectMany(methodInfo => methodInfo.GetCustomAttributes<CommandCmifAttribute>()
+            .Select(command => (command.Id, methodInfo)))
+            .ToDictionary(command => command.Id, command => command.methodInfo);
+    }
+    
+    public void CallCmifMethod(ServiceCtx context)
+    {
+        // Dispatch to appropriate command handler
+        int cmdId = context.Request.CommandId;
+        if (CmifCommands.TryGetValue(cmdId, out MethodInfo method))
+        {
+            method.Invoke(this, new object[] { context });
+        }
+    }
+}
+```
+
+#### Example Service Implementation
+
+```csharp
+// Example: Time service implementation
+class ITimeServiceManager : IpcService
+{
+    public ITimeServiceManager(ServiceCtx context) : base(context.Device.System.SmServer) { }
+    
+    [CommandCmif(0)] // Command ID 0
+    // GetStandardUserSystemClock() -> object<nn::timesrv::detail::service::ISystemClock>
+    public ResultCode GetStandardUserSystemClock(ServiceCtx context)
+    {
+        // Create new service instance
+        MakeObject(context, new ISystemClock(
+            context.Device.System.StandardUserSystemClock,
+            context.Device.System.State.UserTimeOffset,
+            false));
+        
+        return ResultCode.Success;
+    }
+    
+    [CommandCmif(1)] // Command ID 1  
+    // GetStandardNetworkSystemClock() -> object<nn::timesrv::detail::service::ISystemClock>
+    public ResultCode GetStandardNetworkSystemClock(ServiceCtx context)
+    {
+        MakeObject(context, new ISystemClock(
+            context.Device.System.StandardNetworkSystemClock,
+            context.Device.System.State.NetworkTimeOffset,
+            true));
+        
+        return ResultCode.Success;
+    }
+    
+    [CommandCmif(2)]
+    // GetStandardSteadyClock() -> object<nn::timesrv::detail::service::ISteadyClock>
+    public ResultCode GetStandardSteadyClock(ServiceCtx context)
+    {
+        MakeObject(context, new ISteadyClock());
+        return ResultCode.Success;
+    }
+}
+```
+
+<Info>
+**Attribute-based dispatch**: Methods are marked with `[CommandCmif(id)]` for automatic IPC routing
+</Info>
+
+### Domain Objects
+
+Services can be converted to "domains" for efficient object management:
+
+```csharp
+public int ConvertToDomain()
+{
+    if (_selfId == -1)
+    {
+        _selfId = _domainObjects.Add(this);
+    }
+    _isDomain = true;
+    return _selfId;
+}
+
+public void CallCmifMethod(ServiceCtx context)
+{
+    IpcService service = this;
+    
+    if (_isDomain)
+    {
+        int domainWord0 = context.RequestData.ReadInt32();
+        int domainObjId = context.RequestData.ReadInt32();
+        
+        int domainCmd = (domainWord0 >> 0) & 0xff;
+        
+        if (domainCmd == 1) // Close object
+        {
+            _domainObjects.Delete(domainObjId);
+            return;
+        }
+        
+        // Route to specific domain object
+        service = _domainObjects.GetObject<IpcService>(domainObjId);
+    }
+    
+    // Invoke command on service
+    int cmdId = context.Request.CommandId;
+    // ...
+}
+```
+
+**Benefits:**
+- Multiple service objects per session
+- Efficient handle management
+- Reduced IPC overhead
+
+## System Call Interface
+
+### SVC (Supervisor Call) Handling
+
+When guest code executes an SVC instruction:
+
+```csharp
+// ARMeilleure emits call to SVC handler
+// Guest: SVC #0x21 (SendSyncRequest)
+
+// Routed to kernel:
+public static ulong SendSyncRequest(ulong handle)
+{
+    KProcess currentProcess = KernelStatic.GetCurrentProcess();
+    KThread currentThread = KernelStatic.GetCurrentThread();
+    
+    KClientSession session = currentProcess.HandleTable.GetObject<KClientSession>(handle);
+    
+    if (session != null)
+    {
+        Result result = session.SendSyncRequest();
+        return (ulong)result.ErrorCode;
+    }
+    
+    return KernelResult.InvalidHandle;
+}
+```
+
+**Common SVCs:**
+
+<Tabs>
+<Tab title="Memory">
+```csharp
+SetHeapSize              // svcSetHeapSize
+MapMemory                // svcMapMemory  
+UnmapMemory              // svcUnmapMemory
+QueryMemory              // svcQueryMemory
+MapSharedMemory          // svcMapSharedMemory
+CreateTransferMemory     // svcCreateTransferMemory
+```
+</Tab>
+
+<Tab title="Synchronization">
+```csharp
+WaitSynchronization      // svcWaitSynchronization
+CancelSynchronization    // svcCancelSynchronization
+SignalEvent              // svcSignalEvent
+CreateEvent              // svcCreateEvent
+CloseMutex               // svcCloseMutex
+```
+</Tab>
+
+<Tab title="Threading">
+```csharp
+CreateThread             // svcCreateThread
+StartThread              // svcStartThread
+ExitThread               // svcExitThread
+SleepThread              // svcSleepThread
+GetThreadPriority        // svcGetThreadPriority
+SetThreadPriority        // svcSetThreadPriority
+```
+</Tab>
+
+<Tab title="IPC">
+```csharp
+ConnectToNamedPort       // svcConnectToNamedPort
+SendSyncRequest          // svcSendSyncRequest
+ReplyAndReceive          // svcReplyAndReceive
+```
+</Tab>
+</Tabs>
+
+## Kernel Emulation
+
+### Process Management
+
+```csharp
+public class KProcess : KSynchronizationObject
+{
+    public ulong Pid { get; }
+    public KMemoryManager MemoryManager { get; }
+    public KHandleTable HandleTable { get; }
+    public KAddressArbiter AddressArbiter { get; }
+    
+    private readonly List<KThread> _threads = new();
+    private readonly List<KSharedMemory> _sharedMemory = new();
+    
+    public CpuContext CpuContext { get; }
+    public ProcessState State { get; set; }
+    
+    public string Name { get; set; }
+    public ulong TitleId { get; set; }
+    
+    // Process creation
+    public static KProcess Create(KernelContext context, 
+                                   ProcessCreationInfo creationInfo)
+    {
+        KProcess process = new KProcess(context);
+        process.Initialize(creationInfo);
+        return process;
+    }
+}
+```
+
+### Thread Scheduling
+
+```csharp
+public class KThread : KSynchronizationObject
+{
+    public int ThreadId { get; }
+    public KProcess Owner { get; }
+    
+    public ThreadState State { get; set; }
+    public long LastScheduledTime { get; set; }
+    
+    private int _priority;
+    public int Priority
+    {
+        get => _priority;
+        set
+        {
+            if (_priority != value)
+            {
+                int oldPriority = _priority;
+                _priority = value;
+                Context.PriorityQueue.ChangePriority(this, oldPriority);
+            }
+        }
+    }
+    
+    public ExecutionContext Context { get; }
+    public ulong EntryPoint { get; set; }
+}
+```
+
+**Scheduler implementation:**
+- Preemptive multitasking
+- Priority-based scheduling (0-63, lower is higher priority)
+- Round-robin within priority levels
+- Thread affinity to CPU cores
+
+### Memory Management
+
+Kernel memory manager handles:
+
+```csharp
+public class KMemoryManager
+{
+    private readonly KMemoryBlock[] _blocks;
+    private readonly KPageTable _pageTable;
+    
+    public Result MapMemory(ulong src, ulong dst, ulong size, 
+                           KMemoryPermission permission)
+    {
+        // Validate addresses
+        // Update page table entries
+        // Set memory permissions
+        // Update memory block tracking
+    }
+    
+    public Result AllocateOrMapMemory(ulong address, ulong pagesCount, 
+                                      KMemoryPermission permission, 
+                                      MemoryRegion region)
+    {
+        // Allocate physical pages from region
+        // Map to virtual address
+        // Set permissions
+    }
+}
+```
+
+**Memory regions:**
+- **Application**: Game code and data
+- **Applet**: System applets
+- **System**: System modules
+- **NvServices**: GPU/multimedia
+
+## Applet System
+
+Emulates Switch's overlay applet system:
+
+```csharp
+public interface IApplet
+{
+    ResultCode Start(AppletSession normalSession, AppletSession interactiveSession);
+    ResultCode GetResult();
+}
+
+public class AppletManager
+{
+    private readonly Dictionary<AppletId, Type> _applets = new()
+    {
+        { AppletId.PlayerSelect, typeof(PlayerSelectApplet) },
+        { AppletId.SoftwareKeyboard, typeof(SoftwareKeyboardApplet) },
+        { AppletId.Error, typeof(ErrorApplet) },
+        { AppletId.Controller, typeof(ControllerApplet) },
+        { AppletId.WebBrowser, typeof(BrowserApplet) },
+    };
+    
+    public IApplet Create(AppletId appletId, Horizon system)
+    {
+        if (_applets.TryGetValue(appletId, out Type type))
+        {
+            return (IApplet)Activator.CreateInstance(type, system);
+        }
+        return null;
+    }
+}
+```
+
+**Implemented applets:**
+
+<CardGroup cols={2}>
+<Card title="Software Keyboard" icon="keyboard">
+On-screen keyboard for text input
+- Inline and full-screen modes
+- Text validation
+- Dictionary suggestions
+</Card>
+
+<Card title="Player Select" icon="user">
+User account selection
+- Shows configured user profiles
+- Icon and nickname display
+</Card>
+
+<Card title="Error Display" icon="triangle-exclamation">
+Error message dialogs
+- Error code formatting
+- Custom error messages
+</Card>
+
+<Card title="Controller Config" icon="gamepad">
+Controller configuration
+- Button remapping
+- Controller order
+</Card>
+</CardGroup>
+
+## File System Services
+
+Virtual file system with multiple mount points:
+
+```csharp
+public class VirtualFileSystem
+{
+    // Real file system paths
+    public string BasePath { get; }
+    public string SdCardPath { get; }
+    
+    // Virtual mounts
+    public IFileSystem RomFs { get; set; }        // Game RomFS
+    public IFileSystem SaveData { get; set; }     // Save data
+    public IFileSystem SystemSaveData { get; set; } // System saves
+    
+    // Content management
+    public void LoadRomFs(string path)
+    {
+        // Mount game RomFS from NSP/XCI/directory
+    }
+    
+    public void CreateSaveData(ulong titleId, SaveDataType type)
+    {
+        // Create save data container
+    }
+}
+```
+
+**Mount points:**
+- `@SystemContent`: System firmware
+- `@UserContent`: User installed content
+- `@SdCard`: SD card access
+- `@CalibFile`: Calibration data
+- `@User`: User partition
+
+## Service Context
+
+Passed to all service methods:
+
+```csharp
+public class ServiceCtx
+{
+    public Switch Device { get; }
+    public KProcess Process { get; }
+    public IVirtualMemoryManager Memory { get; }
+    public KThread Thread { get; }
+    public IpcMessage Request { get; }
+    public IpcMessage Response { get; }
+    
+    // Helper methods
+    public BinaryReader RequestData { get; }
+    public BinaryWriter ResponseData { get; }
+    
+    // Object creation
+    public void MakeObject(IpcService service) { /* ... */ }
+}
+```
+
+## Result Codes
+
+Horizon uses result codes for error handling:
+
+```csharp
+public struct ResultCode
+{
+    public uint Value { get; }
+    
+    public int Module => (int)((Value >> 0) & 0x1FF);
+    public int Description => (int)((Value >> 9) & 0x1FFF);
+    
+    public static ResultCode Success => new ResultCode(0);
+    
+    // Common results
+    public static ResultCode ModuleNotFound => new ResultCode(0x202);
+    public static ResultCode OutOfMemory => new ResultCode(0xC2);
+    public static ResultCode InvalidAddress => new ResultCode(0xCC);
+}
+```
+
+## Performance Considerations
+
+<AccordionGroup>
+<Accordion title="IPC Overhead" icon="clock">
+- Method reflection cached at service creation
+- Direct C# method invocation (no marshaling)
+- Typical IPC latency: 1-5 microseconds
+</Accordion>
+
+<Accordion title="Memory Sharing" icon="memory">
+- Zero-copy for shared memory regions
+- Direct pointer access for mapped buffers
+- Efficient for HID, graphics, audio data
+</Accordion>
+
+<Accordion title="Threading" icon="diagram-project">
+- Server threads handle IPC asynchronously
+- Guest threads scheduled by kernel emulator
+- Synchronization primitives map to host OS
+</Accordion>
+</AccordionGroup>
+
+## Related Topics
+
+<CardGroup cols={2}>
+<Card title="ARMeilleure" icon="microchip" href="/architecture/armeilleure">
+How guest code interfaces with HLE services
+</Card>
+
+<Card title="Graphics Subsystem" icon="image" href="/architecture/graphics-subsystem">
+NVDRV service and GPU command handling
+</Card>
+
+<Card title="Audio Subsystem" icon="volume-high" href="/architecture/audio-subsystem">
+Audio renderer service implementation
+</Card>
+
+<Card title="Input System" icon="gamepad" href="/architecture/input-system">
+HID service and controller emulation
+</Card>
+</CardGroup>
+
+## Source Code Reference
+
+- `src/Ryujinx.HLE/HOS/Horizon.cs:45` - Main Horizon OS class
+- `src/Ryujinx.HLE/HOS/Services/IpcService.cs:14` - IPC service base
+- `src/Ryujinx.HLE/HOS/Ipc/IpcMessage.cs` - IPC message structure
+- `src/Ryujinx.HLE/HOS/Kernel/` - Kernel emulation
+- `src/Ryujinx.HLE/HOS/Services/` - All service implementations

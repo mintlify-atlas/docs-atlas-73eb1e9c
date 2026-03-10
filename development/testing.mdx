@@ -1,0 +1,644 @@
+---
+title: Testing Ryujinx
+description: Guide to writing and running tests for the Ryujinx emulator
+icon: flask
+---
+
+## Overview
+
+Ryujinx uses comprehensive testing to ensure emulation accuracy and prevent regressions. Tests are written using [NUnit](https://nunit.org/) and run automatically in CI.
+
+<Note>
+All test projects are in the `src/` directory with the `Ryujinx.Tests*` naming pattern.
+</Note>
+
+## Test Project Structure
+
+Ryujinx has several test projects:
+
+| Project | Purpose | Location |
+|---------|---------|----------|
+| `Ryujinx.Tests` | Core CPU/GPU/HLE tests | `src/Ryujinx.Tests/` |
+| `Ryujinx.Tests.Memory` | Memory management tests | `src/Ryujinx.Tests.Memory/` |
+| `Ryujinx.Tests.Unicorn` | CPU emulation validation | `src/Ryujinx.Tests.Unicorn/` |
+
+## Running Tests
+
+### Run All Tests
+
+<Tabs>
+  <Tab title="Command Line">
+    ```bash
+    # Run all tests
+    dotnet test
+    
+    # Run with verbose output
+    dotnet test -v detailed
+    
+    # Run in Release configuration
+    dotnet test -c Release
+    ```
+  </Tab>
+  
+  <Tab title="Visual Studio">
+    1. **Test → Run All Tests** (Ctrl+R, A)
+    2. View results in **Test Explorer**
+  </Tab>
+  
+  <Tab title="VS Code">
+    1. Install [.NET Core Test Explorer](https://marketplace.visualstudio.com/items?itemName=formulahendry.dotnet-test-explorer)
+    2. Click test icons in the gutter or use Test Explorer panel
+  </Tab>
+  
+  <Tab title="Rider">
+    1. **Run → Run Unit Tests** (Ctrl+T, R)
+    2. View results in **Unit Tests** window
+  </Tab>
+</Tabs>
+
+### Run Specific Tests
+
+<CodeGroup>
+
+```bash Filter by Name
+# Run tests matching a pattern
+dotnet test --filter "FullyQualifiedName~ShaderCache"
+
+# Run specific test method
+dotnet test --filter "FullyQualifiedName=Ryujinx.Tests.Cpu.CpuTestAlu.Add_S_64bit"
+```
+
+```bash Filter by Category
+# Run tests in specific namespace
+dotnet test --filter "FullyQualifiedName~Ryujinx.Tests.Cpu"
+
+# Run all GPU tests
+dotnet test --filter "FullyQualifiedName~Graphics"
+```
+
+```bash Filter by Project
+# Run only memory tests
+dotnet test src/Ryujinx.Tests.Memory
+
+# Run only CPU tests
+dotnet test src/Ryujinx.Tests
+```
+
+</CodeGroup>
+
+## Test Structure
+
+From `src/Ryujinx.Tests/Cpu/CpuTest.cs:12-14`:
+
+```csharp
+using NUnit.Framework;
+
+namespace Ryujinx.Tests.Cpu
+{
+    [TestFixture]
+    public class CpuTest
+    {
+        private ExecutionContext _context;
+        private UnicornAArch64 _unicornEmu;
+        
+        [SetUp]
+        public void Setup()
+        {
+            // Initialize test environment
+            _context = CpuContext.CreateExecutionContext();
+            _unicornEmu = new UnicornAArch64();
+        }
+        
+        [TearDown]
+        public void Teardown()
+        {
+            // Clean up resources
+            _context.Dispose();
+            _unicornEmu.Dispose();
+        }
+        
+        [Test]
+        public void Add_S_64bit()
+        {
+            // Test implementation
+        }
+    }
+}
+```
+
+### Key Components
+
+<Steps>
+  <Step title="TestFixture attribute">
+    Marks a class as containing tests
+    ```csharp
+    [TestFixture]
+    public class MyTests { }
+    ```
+  </Step>
+  
+  <Step title="SetUp method">
+    Runs before each test to initialize state
+    ```csharp
+    [SetUp]
+    public void Setup() { }
+    ```
+  </Step>
+  
+  <Step title="TearDown method">
+    Runs after each test to clean up
+    ```csharp
+    [TearDown]
+    public void Teardown() { }
+    ```
+  </Step>
+  
+  <Step title="Test methods">
+    Individual test cases
+    ```csharp
+    [Test]
+    public void MyTest() { }
+    ```
+  </Step>
+</Steps>
+
+## Writing CPU Tests
+
+CPU tests validate ARM instruction emulation against Unicorn Engine.
+
+### Example CPU Test
+
+From `src/Ryujinx.Tests/Cpu/CpuTestAlu.cs`:
+
+```csharp
+[Test]
+public void Add_S_64bit([ValueSource(nameof(TestValues))] ulong x0,
+                        [ValueSource(nameof(TestValues))] ulong x1)
+{
+    // Encode ARM instruction: ADD X2, X0, X1
+    uint opcode = 0x8B010002; 
+    
+    // Execute and compare with Unicorn
+    SingleOpcode(opcode, x0: x0, x1: x1);
+    
+    CompareAgainstUnicorn();
+}
+```
+
+### CPU Test Helpers
+
+From `src/Ryujinx.Tests/Cpu/CpuTest.cs:186-224`:
+
+<AccordionGroup>
+  <Accordion title="SingleOpcode - Execute one instruction">
+    ```csharp
+    protected ExecutionContext SingleOpcode(
+        uint opcode,
+        ulong x0 = 0, ulong x1 = 0,
+        V128 v0 = default,
+        bool runUnicorn = true)
+    {
+        Opcode(opcode);
+        Opcode(0xD65F03C0); // RET
+        SetContext(x0, x1, v0: v0);
+        ExecuteOpcodes(runUnicorn);
+        return GetContext();
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="CompareAgainstUnicorn - Validate results">
+    ```csharp
+    protected void CompareAgainstUnicorn(
+        Fpsr fpsrMask = Fpsr.None,
+        FpSkips fpSkips = FpSkips.None)
+    {
+        // Compare all registers
+        Assert.That(_context.GetX(0), Is.EqualTo(_unicornEmu.X[0]));
+        Assert.That(_context.GetX(1), Is.EqualTo(_unicornEmu.X[1]));
+        // ... all 32 registers
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="SetWorkingMemory - Setup test memory">
+    ```csharp
+    protected void SetWorkingMemory(ulong offset, byte[] data)
+    {
+        _memory.Write(DataBaseAddress + offset, data);
+        _unicornEmu.MemoryWrite(DataBaseAddress + offset, data);
+        _usingMemory = true;
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Writing Memory Tests
+
+Memory tests validate the memory management system.
+
+### Example Memory Test
+
+From `src/Ryujinx.Tests.Memory/TrackingTests.cs`:
+
+```csharp
+[Test]
+public void ReadWriteTracking()
+{
+    const ulong MemorySize = 0x1000;
+    const ulong TestValue = 0x12345678;
+    
+    MemoryBlock memory = new MemoryBlock(MemorySize);
+    
+    // Setup tracking
+    var tracking = new RegionHandle(memory, 0, MemorySize);
+    
+    // Write and verify tracking
+    memory.Write(0, TestValue);
+    Assert.IsTrue(tracking.Dirty);
+    
+    // Reprotect and verify
+    tracking.Reprotect();
+    Assert.IsFalse(tracking.Dirty);
+    
+    memory.Dispose();
+}
+```
+
+## Writing Audio/Renderer Tests
+
+From `src/Ryujinx.Tests/Audio/Renderer/`:
+
+```csharp
+using NUnit.Framework;
+
+[TestFixture]
+public class VoiceInfoTests
+{
+    [Test]
+    public void TestVoiceInfoInitialization()
+    {
+        var voiceInfo = new VoiceInfo();
+        
+        Assert.AreEqual(0, voiceInfo.Volume);
+        Assert.AreEqual(VoicePlayState.Stopped, voiceInfo.PlayState);
+    }
+}
+```
+
+## Test Data
+
+### Value Sources
+
+Generate test data using `ValueSource`:
+
+```csharp
+private static ulong[] TestValues => new ulong[]
+{
+    0x0000000000000000,
+    0x0000000000000001,
+    0x7FFFFFFFFFFFFFFF,
+    0xFFFFFFFFFFFFFFFF,
+};
+
+[Test]
+public void MyTest([ValueSource(nameof(TestValues))] ulong value)
+{
+    // Test runs once for each value
+}
+```
+
+### Random Test Data
+
+From `src/Ryujinx.Tests/Cpu/CpuTest.cs:531-541`:
+
+```csharp
+protected static ushort GenNormalH()
+{
+    uint rnd;
+    do
+        rnd = TestContext.CurrentContext.Random.NextUShort();
+    while ((rnd & 0x7C00u) == 0u || (~rnd & 0x7C00u) == 0u);
+    return (ushort)rnd;
+}
+
+protected static uint GenNormalS()
+{
+    uint rnd;
+    do
+        rnd = TestContext.CurrentContext.Random.NextUInt();
+    while ((rnd & 0x7F800000u) == 0u || (~rnd & 0x7F800000u) == 0u);
+    return rnd;
+}
+```
+
+## Assertions
+
+### NUnit Assertions
+
+<CodeGroup>
+
+```csharp Equality
+Assert.That(actual, Is.EqualTo(expected));
+Assert.AreEqual(expected, actual);
+Assert.AreNotEqual(unexpected, actual);
+```
+
+```csharp Comparison
+Assert.That(value, Is.GreaterThan(0));
+Assert.That(value, Is.LessThanOrEqualTo(100));
+Assert.That(value, Is.InRange(0, 100));
+```
+
+```csharp Boolean
+Assert.IsTrue(condition);
+Assert.IsFalse(condition);
+Assert.IsNull(obj);
+Assert.IsNotNull(obj);
+```
+
+```csharp Collections
+Assert.That(collection, Is.Empty);
+Assert.That(collection, Has.Count.EqualTo(5));
+Assert.That(collection, Contains.Item(42));
+```
+
+```csharp Exceptions
+Assert.Throws<ArgumentException>(() => Method());
+Assert.DoesNotThrow(() => Method());
+```
+
+</CodeGroup>
+
+### Floating-Point Comparisons
+
+```csharp
+// ULP (Units in Last Place) tolerance
+Assert.That(actual, Is.EqualTo(expected).Within(1).Ulps);
+
+// Percent tolerance
+Assert.That(actual, Is.EqualTo(expected).Within(0.01).Percent);
+```
+
+## CI Testing
+
+From `.github/workflows/build.yml:56-62`:
+
+```yaml
+- name: Test
+  uses: TSRBerry/unstable-commands@v1
+  with:
+    commands: dotnet test --no-build -c "${{ matrix.configuration }}"
+    timeout-minutes: 10
+    retry-codes: 139
+  if: matrix.platform.name != 'linux-arm64'
+```
+
+### CI Test Characteristics
+
+<CardGroup cols={2}>
+  <Card title="Automatic Execution" icon="robot">
+    Tests run on every PR and commit
+  </Card>
+  
+  <Card title="Multi-Platform" icon="layer-group">
+    Tests run on Windows, Linux, and macOS
+  </Card>
+  
+  <Card title="Timeout Protection" icon="clock">
+    10-minute timeout prevents hanging tests
+  </Card>
+  
+  <Card title="Retry on Crash" icon="rotate">
+    Retry on code 139 (segfault) for flaky tests
+  </Card>
+</CardGroup>
+
+## Test Best Practices
+
+### DO
+
+<Steps>
+  <Step title="Test one thing per test">
+    Each test should verify a single behavior
+    ```csharp
+    [Test]
+    public void Add_WithPositiveNumbers_ReturnsSum() { }
+    
+    [Test]
+    public void Add_WithNegativeNumbers_ReturnsSum() { }
+    ```
+  </Step>
+  
+  <Step title="Use descriptive names">
+    Test names should describe what is being tested
+    ```csharp
+    [Test]
+    public void ShaderCache_GetProgram_WithInvalidId_ReturnsNull() { }
+    ```
+  </Step>
+  
+  <Step title="Arrange-Act-Assert pattern">
+    ```csharp
+    [Test]
+    public void MyTest()
+    {
+        // Arrange
+        var sut = new SystemUnderTest();
+        
+        // Act
+        var result = sut.DoSomething();
+        
+        // Assert
+        Assert.That(result, Is.EqualTo(expected));
+    }
+    ```
+  </Step>
+  
+  <Step title="Clean up resources">
+    Use `TearDown` or `using` statements
+    ```csharp
+    [TearDown]
+    public void Teardown()
+    {
+        _context?.Dispose();
+        _memory?.Dispose();
+    }
+    ```
+  </Step>
+</Steps>
+
+### DON'T
+
+<Warning>
+- Don't test implementation details, test behavior
+- Don't make tests depend on each other
+- Don't use random data without a seed (makes failures unreproducible)
+- Don't ignore failing tests - fix them or remove them
+</Warning>
+
+## Debugging Tests
+
+### Debug a Single Test
+
+<Tabs>
+  <Tab title="Visual Studio">
+    Right-click test method → **Debug Test(s)**
+  </Tab>
+  
+  <Tab title="VS Code">
+    Click **Debug Test** in CodeLens above test method
+  </Tab>
+  
+  <Tab title="Rider">
+    Click debug icon in gutter next to test
+  </Tab>
+  
+  <Tab title="Command Line">
+    ```bash
+    dotnet test --filter "FullyQualifiedName=Namespace.Class.TestMethod"
+    ```
+    Then attach debugger to process
+  </Tab>
+</Tabs>
+
+### Test Output
+
+```csharp
+[Test]
+public void MyTest()
+{
+    // Output appears in test results
+    TestContext.WriteLine("Debug information");
+    TestContext.Out.WriteLine($"Value: {someValue}");
+}
+```
+
+## Code Coverage
+
+### Generate Coverage Report
+
+```bash
+# Install coverlet
+dotnet tool install -g coverlet.console
+
+# Run tests with coverage
+dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
+
+# Generate HTML report
+reportgenerator -reports:coverage.opencover.xml -targetdir:coverage-report
+```
+
+### Coverage Tools
+
+- **[Coverlet](https://github.com/coverlet-coverage/coverlet)**: Cross-platform coverage
+- **[Fine Code Coverage](https://marketplace.visualstudio.com/items?itemName=FortuneNgwenya.FineCodeCoverage)**: VS extension
+- **[dotCover](https://www.jetbrains.com/dotcover/)**: JetBrains coverage tool
+
+## Performance Testing
+
+For micro-benchmarks, see the [Performance guide](/development/performance).
+
+### Simple Performance Test
+
+```csharp
+[Test]
+public void PerformanceTest()
+{
+    var sw = Stopwatch.StartNew();
+    
+    // Operation to test
+    for (int i = 0; i < 1000000; i++)
+    {
+        DoOperation();
+    }
+    
+    sw.Stop();
+    
+    // Assert performance requirement
+    Assert.That(sw.ElapsedMilliseconds, Is.LessThan(1000),
+        "Operation took too long");
+}
+```
+
+## Common Test Patterns
+
+### Parameterized Tests
+
+```csharp
+[TestCase(0, 0, 0)]
+[TestCase(1, 2, 3)]
+[TestCase(-1, 1, 0)]
+public void Add_ReturnsSum(int a, int b, int expected)
+{
+    Assert.That(a + b, Is.EqualTo(expected));
+}
+```
+
+### Combinatorial Tests
+
+```csharp
+[Test]
+public void TestAllCombinations(
+    [Values(1, 2, 3)] int x,
+    [Values("a", "b")] string y)
+{
+    // Runs 6 times (3 * 2 combinations)
+}
+```
+
+### Sequential Tests
+
+```csharp
+[Test, Sequential]
+public void TestPairs(
+    [Values(1, 2, 3)] int x,
+    [Values(10, 20, 30)] int y)
+{
+    // Runs 3 times: (1,10), (2,20), (3,30)
+}
+```
+
+## Test Configuration
+
+From `src/Ryujinx.Tests/Ryujinx.Tests.csproj:21-24`:
+
+```xml
+<ItemGroup>
+  <PackageReference Include="Microsoft.NET.Test.Sdk" />
+  <PackageReference Include="NUnit" />
+  <PackageReference Include="NUnit3TestAdapter" />
+</ItemGroup>
+```
+
+## Skipping Tests
+
+```csharp
+// Skip always
+[Test, Ignore("Not yet implemented")]
+public void FutureTest() { }
+
+// Skip conditionally
+[Test]
+public void PlatformSpecificTest()
+{
+    if (!OperatingSystem.IsWindows())
+    {
+        Assert.Ignore("Windows only test");
+    }
+}
+```
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="Debugging" icon="bug" href="/development/debugging">
+    Debug failing tests
+  </Card>
+  <Card title="Performance" icon="gauge" href="/development/performance">
+    Benchmark and optimize
+  </Card>
+  <Card title="PR Guide" icon="git-pull-request" href="/development/pr-guide">
+    Submit your tests
+  </Card>
+</CardGroup>

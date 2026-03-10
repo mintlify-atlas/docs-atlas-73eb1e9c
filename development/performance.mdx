@@ -1,0 +1,706 @@
+---
+title: Performance Optimization
+description: Profiling and optimization techniques for Ryujinx development
+icon: gauge
+---
+
+## Overview
+
+Performance is critical for emulation. This guide covers profiling tools, optimization techniques, and performance analysis for Ryujinx development.
+
+<Warning>
+**Measure first, optimize second.** Always profile before optimizing to avoid premature optimization.
+</Warning>
+
+## Build for Performance
+
+### Release Configuration
+
+```bash
+# Build optimized release version
+dotnet build -c Release
+
+# Publish optimized for specific platform
+dotnet publish -c Release -r win-x64
+```
+
+### Optimization Flags
+
+From `src/ARMeilleure/ARMeilleure.csproj`:
+
+```xml
+<PropertyGroup>
+  <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  <Optimize>True</Optimize>
+</PropertyGroup>
+```
+
+### JIT Optimizations
+
+Ryujinx uses ARMeilleure (ARM JIT compiler) for CPU emulation:
+
+```csharp
+// From src/ARMeilleure/Optimizations.cs
+public static class Optimizations
+{
+    public static bool AllowLcqInFunctionTable { get; set; } = true;
+    public static bool UseUnmanagedDispatchLoop { get; set; } = true;
+}
+```
+
+<Note>
+These optimizations are disabled during testing for faster test execution (from `src/Ryujinx.Tests/Cpu/CpuTest.cs:65-66`).
+</Note>
+
+## Profiling Tools
+
+### Built-in .NET Profilers
+
+<Tabs>
+  <Tab title="dotnet-counters">
+    Real-time performance metrics:
+    
+    ```bash
+    # Install
+    dotnet tool install -g dotnet-counters
+    
+    # Monitor running process
+    dotnet-counters monitor --process-id <PID>
+    
+    # Monitor specific counters
+    dotnet-counters monitor --process-id <PID> \
+      System.Runtime[cpu-usage,working-set,gc-heap-size]
+    ```
+  </Tab>
+  
+  <Tab title="dotnet-trace">
+    Collect performance traces:
+    
+    ```bash
+    # Install
+    dotnet tool install -g dotnet-trace
+    
+    # Collect trace
+    dotnet-trace collect --process-id <PID> \
+      --providers Microsoft-DotNETCore-SampleProfiler
+    
+    # Analyze with PerfView or Visual Studio
+    ```
+  </Tab>
+  
+  <Tab title="dotnet-dump">
+    Analyze memory dumps:
+    
+    ```bash
+    # Install
+    dotnet tool install -g dotnet-dump
+    
+    # Capture dump
+    dotnet-dump collect --process-id <PID>
+    
+    # Analyze dump
+    dotnet-dump analyze dump.dmp
+    ```
+  </Tab>
+</Tabs>
+
+### Visual Studio Profiler
+
+<Steps>
+  <Step title="Start profiling session">
+    **Debug → Performance Profiler** or **Alt+F2**
+  </Step>
+  
+  <Step title="Select profiling tools">
+    - **CPU Usage**: Find hot paths
+    - **.NET Object Allocation**: Memory allocations
+    - **Instrumentation**: Detailed timing
+    - **GPU Usage**: Graphics performance
+  </Step>
+  
+  <Step title="Start profiling">
+    Click **Start** to launch with profiling
+  </Step>
+  
+  <Step title="Analyze results">
+    Review flame graphs, call trees, and hot paths
+  </Step>
+</Steps>
+
+### JetBrains dotTrace
+
+<Steps>
+  <Step title="Profile application">
+    **Run → Profile** in Rider
+  </Step>
+  
+  <Step title="Choose profiling mode">
+    - **Sampling**: Low overhead, statistical
+    - **Tracing**: Accurate, higher overhead
+    - **Line-by-line**: Most detailed
+  </Step>
+  
+  <Step title="Analyze timeline">
+    View CPU usage over time and identify spikes
+  </Step>
+  
+  <Step title="Inspect call tree">
+    Find methods consuming most CPU time
+  </Step>
+</Steps>
+
+### PerfView (Free, Windows)
+
+```bash
+# Download from https://github.com/microsoft/perfview
+
+# Collect trace
+PerfView.exe collect
+
+# Analyze trace
+PerfView.exe <trace-file>.etl
+```
+
+## Benchmarking
+
+### BenchmarkDotNet
+
+The gold standard for .NET micro-benchmarking:
+
+<Steps>
+  <Step title="Install package">
+    ```xml
+    <PackageReference Include="BenchmarkDotNet" Version="0.13.12" />
+    ```
+  </Step>
+  
+  <Step title="Create benchmark class">
+    ```csharp
+    using BenchmarkDotNet.Attributes;
+    using BenchmarkDotNet.Running;
+    
+    [MemoryDiagnoser]
+    public class ShaderCacheBenchmarks
+    {
+        private ShaderCache _cache;
+        
+        [GlobalSetup]
+        public void Setup()
+        {
+            _cache = new ShaderCache();
+        }
+        
+        [Benchmark]
+        public void GetShaderProgram()
+        {
+            _cache.GetProgram(0x1234);
+        }
+        
+        [Benchmark]
+        public void CompileShader()
+        {
+            _cache.CompileShader(shaderCode);
+        }
+    }
+    ```
+  </Step>
+  
+  <Step title="Run benchmarks">
+    ```csharp
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            BenchmarkRunner.Run<ShaderCacheBenchmarks>();
+        }
+    }
+    ```
+  </Step>
+</Steps>
+
+### Benchmark Attributes
+
+<AccordionGroup>
+  <Accordion title="[Benchmark] - Mark method to benchmark">
+    ```csharp
+    [Benchmark]
+    public void MyMethod() { }
+    ```
+  </Accordion>
+  
+  <Accordion title="[GlobalSetup] - Run once before all benchmarks">
+    ```csharp
+    [GlobalSetup]
+    public void Setup() { }
+    ```
+  </Accordion>
+  
+  <Accordion title="[IterationSetup] - Run before each iteration">
+    ```csharp
+    [IterationSetup]
+    public void IterationSetup() { }
+    ```
+  </Accordion>
+  
+  <Accordion title="[MemoryDiagnoser] - Track allocations">
+    ```csharp
+    [MemoryDiagnoser]
+    public class MyBenchmarks { }
+    ```
+  </Accordion>
+  
+  <Accordion title="[Params] - Test multiple values">
+    ```csharp
+    [Params(100, 1000, 10000)]
+    public int Size { get; set; }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Simple Performance Measurement
+
+```csharp
+using System.Diagnostics;
+
+// Quick measurement
+var sw = Stopwatch.StartNew();
+DoWork();
+sw.Stop();
+Logger.Info?.Print(LogClass.Application, 
+    $"Operation took {sw.ElapsedMilliseconds}ms");
+
+// High-resolution timing
+long start = Stopwatch.GetTimestamp();
+DoWork();
+long end = Stopwatch.GetTimestamp();
+double elapsedMs = (end - start) * 1000.0 / Stopwatch.Frequency;
+```
+
+## Optimization Techniques
+
+### Memory Allocation Optimization
+
+<Tabs>
+  <Tab title="Use Span<T>">
+    ```csharp
+    // Bad: allocates array
+    byte[] buffer = new byte[1024];
+    ProcessData(buffer);
+    
+    // Good: stack allocation
+    Span<byte> buffer = stackalloc byte[1024];
+    ProcessData(buffer);
+    ```
+  </Tab>
+  
+  <Tab title="Object Pooling">
+    ```csharp
+    using System.Buffers;
+    
+    // Rent from pool instead of allocating
+    byte[] buffer = ArrayPool<byte>.Shared.Rent(1024);
+    try
+    {
+        ProcessData(buffer);
+    }
+    finally
+    {
+        ArrayPool<byte>.Shared.Return(buffer);
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Reduce Boxing">
+    ```csharp
+    // Bad: boxes value type
+    object obj = 42;
+    
+    // Good: use generics
+    T Value<T>(T value) => value;
+    ```
+  </Tab>
+  
+  <Tab title="Avoid Allocations in Loops">
+    ```csharp
+    // Bad: allocates every iteration
+    for (int i = 0; i < 1000; i++)
+    {
+        var temp = new StringBuilder();
+        temp.Append(i);
+    }
+    
+    // Good: allocate once
+    var temp = new StringBuilder();
+    for (int i = 0; i < 1000; i++)
+    {
+        temp.Clear();
+        temp.Append(i);
+    }
+    ```
+  </Tab>
+</Tabs>
+
+### CPU Optimization
+
+<Tabs>
+  <Tab title="Inline Methods">
+    ```csharp
+    using System.Runtime.CompilerServices;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private int FastMethod(int x)
+    {
+        return x * 2;
+    }
+    ```
+  </Tab>
+  
+  <Tab title="SIMD Operations">
+    ```csharp
+    using System.Runtime.Intrinsics;
+    using System.Runtime.Intrinsics.X86;
+    
+    if (Avx2.IsSupported)
+    {
+        // Use AVX2 SIMD operations
+        Vector256<int> vec = Avx2.LoadVector256(ptr);
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Unsafe Code">
+    ```csharp
+    unsafe
+    {
+        fixed (byte* ptr = &buffer[0])
+        {
+            // Fast pointer operations
+            *ptr = 42;
+        }
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Branch Prediction">
+    ```csharp
+    // Help branch predictor
+    if (likely_condition) // Most common path
+    {
+        FastPath();
+    }
+    else
+    {
+        SlowPath();
+    }
+    ```
+  </Tab>
+</Tabs>
+
+### Data Structure Optimization
+
+```csharp
+// Use appropriate collections
+
+// Fast lookup: O(1)
+var dict = new Dictionary<int, string>();
+
+// Fast iteration
+var list = new List<int>();
+
+// Concurrent access
+var concurrent = new ConcurrentDictionary<int, string>();
+
+// Memory-efficient
+var span = new Span<byte>(buffer);
+```
+
+## GPU Performance
+
+### Shader Compilation
+
+From `src/Ryujinx.Graphics.Gpu/Shader/ShaderCache.cs`:
+
+```csharp
+// Cache compiled shaders to avoid recompilation
+private readonly Dictionary<ulong, CachedShaderProgram> _programCache;
+
+public ShaderProgram GetProgram(ulong address)
+{
+    if (_programCache.TryGetValue(address, out var cached))
+    {
+        return cached.Program; // Fast path
+    }
+    
+    // Compile and cache
+    var program = CompileShader(address);
+    _programCache[address] = new CachedShaderProgram(program);
+    return program;
+}
+```
+
+### Texture Caching
+
+- Reuse texture resources
+- Compress textures when possible
+- Use appropriate texture formats
+- Implement mipmap generation efficiently
+
+## Memory Performance
+
+### Memory Profiling
+
+<Steps>
+  <Step title="Take memory snapshot">
+    Visual Studio: **Debug → Memory Usage → Take Snapshot**
+  </Step>
+  
+  <Step title="Perform operation">
+    Execute the code you want to analyze
+  </Step>
+  
+  <Step title="Take second snapshot">
+    Compare snapshots to see allocations
+  </Step>
+  
+  <Step title="Analyze differences">
+    Identify objects that weren't garbage collected
+  </Step>
+</Steps>
+
+### Common Memory Issues
+
+<AccordionGroup>
+  <Accordion title="Memory Leaks">
+    **Symptom**: Memory usage grows over time
+    
+    **Causes**:
+    - Event handlers not unsubscribed
+    - Static collections holding references
+    - IDisposable not called
+    
+    **Fix**:
+    ```csharp
+    // Unsubscribe events
+    obj.Event -= Handler;
+    
+    // Use weak references
+    var weakRef = new WeakReference<T>(obj);
+    
+    // Dispose properly
+    using var resource = new Resource();
+    ```
+  </Accordion>
+  
+  <Accordion title="Excessive Allocations">
+    **Symptom**: High GC pressure, frequent Gen0 collections
+    
+    **Fix**:
+    - Use object pooling
+    - Use `Span<T>` and `stackalloc`
+    - Reuse buffers
+  </Accordion>
+  
+  <Accordion title="Large Object Heap Fragmentation">
+    **Symptom**: Memory usage higher than expected
+    
+    **Fix**:
+    - Avoid allocating >85KB objects
+    - Use array pooling
+    - Use `GC.TryStartNoGCRegion()` for critical sections
+  </Accordion>
+</AccordionGroup>
+
+## Concurrency and Threading
+
+### Parallel Processing
+
+```csharp
+using System.Threading.Tasks;
+
+// Parallel loops
+Parallel.For(0, count, i =>
+{
+    ProcessItem(i);
+});
+
+// Parallel LINQ
+var results = items.AsParallel()
+    .Where(x => x.IsValid)
+    .Select(x => Transform(x))
+    .ToList();
+
+// Task-based parallelism
+var tasks = new Task[10];
+for (int i = 0; i < 10; i++)
+{
+    int index = i;
+    tasks[i] = Task.Run(() => ProcessItem(index));
+}
+await Task.WhenAll(tasks);
+```
+
+### Lock-Free Programming
+
+```csharp
+using System.Threading;
+
+// Interlocked operations
+Interlocked.Increment(ref counter);
+Interlocked.CompareExchange(ref value, newValue, comparand);
+
+// Concurrent collections
+var queue = new ConcurrentQueue<T>();
+var dict = new ConcurrentDictionary<K, V>();
+```
+
+## Performance Monitoring
+
+### Built-in Performance Counters
+
+```csharp
+using System.Diagnostics;
+
+// CPU usage
+var cpuCounter = new PerformanceCounter(
+    "Processor", "% Processor Time", "_Total");
+float cpuUsage = cpuCounter.NextValue();
+
+// Memory usage
+long memoryUsage = GC.GetTotalMemory(false);
+```
+
+### Custom Metrics
+
+```csharp
+public class PerformanceMetrics
+{
+    private long _frameCount;
+    private Stopwatch _fpsTimer = Stopwatch.StartNew();
+    
+    public void RecordFrame()
+    {
+        Interlocked.Increment(ref _frameCount);
+        
+        if (_fpsTimer.ElapsedMilliseconds >= 1000)
+        {
+            long fps = _frameCount;
+            Logger.Info?.Print(LogClass.Application, $"FPS: {fps}");
+            
+            Interlocked.Exchange(ref _frameCount, 0);
+            _fpsTimer.Restart();
+        }
+    }
+}
+```
+
+## Performance Testing
+
+### Load Testing
+
+```csharp
+[Test]
+public void LoadTest()
+{
+    const int operations = 1000000;
+    var sw = Stopwatch.StartNew();
+    
+    for (int i = 0; i < operations; i++)
+    {
+        DoOperation();
+    }
+    
+    sw.Stop();
+    double opsPerSecond = operations / sw.Elapsed.TotalSeconds;
+    
+    TestContext.WriteLine($"Operations/sec: {opsPerSecond:N0}");
+    Assert.That(opsPerSecond, Is.GreaterThan(100000));
+}
+```
+
+## Optimization Checklist
+
+Before optimizing, verify:
+
+- [ ] Profiled to identify actual bottlenecks
+- [ ] Measured baseline performance
+- [ ] Focused on hot paths (80/20 rule)
+- [ ] Tested in Release configuration
+- [ ] Considered algorithmic improvements first
+- [ ] Avoided premature optimization
+- [ ] Benchmarked changes before/after
+- [ ] Tested on target hardware
+
+## Common Bottlenecks in Emulation
+
+<CardGroup cols={2}>
+  <Card title="CPU Emulation" icon="microchip">
+    - JIT compilation overhead
+    - Instruction decoding
+    - Register state management
+    - Memory access translation
+  </Card>
+  
+  <Card title="GPU Emulation" icon="display">
+    - Shader compilation/translation
+    - Texture uploads/downloads
+    - Draw call overhead
+    - GPU synchronization
+  </Card>
+  
+  <Card title="Memory Management" icon="memory">
+    - Page table lookups
+    - Memory mapping/unmapping
+    - Cache invalidation
+    - GC pressure from allocations
+  </Card>
+  
+  <Card title="I/O Operations" icon="hard-drive">
+    - File system access
+    - Save state serialization
+    - Shader cache persistence
+    - Log file writes
+  </Card>
+</CardGroup>
+
+## Performance Tips
+
+<Tip>
+**Profile on target hardware** - Performance characteristics vary significantly between systems
+</Tip>
+
+<Tip>
+**Optimize algorithms first** - A better algorithm beats micro-optimizations
+</Tip>
+
+<Tip>
+**Cache expensive operations** - Especially JIT compilation and shader translation
+</Tip>
+
+<Tip>
+**Use async/await correctly** - Don't block threads unnecessarily
+</Tip>
+
+<Tip>
+**Monitor GC metrics** - Excessive GC pauses hurt emulation smoothness
+</Tip>
+
+## Resources
+
+- [.NET Performance Tips](https://learn.microsoft.com/en-us/dotnet/core/performance/)
+- [BenchmarkDotNet Documentation](https://benchmarkdotnet.org/)
+- [PerfView Tutorial](https://github.com/microsoft/perfview/blob/main/documentation/Tutorial.md)
+- [Writing High-Performance C#](https://www.youtube.com/watch?v=CSPSvBeqJ9c)
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="Testing" icon="flask" href="/development/testing">
+    Benchmark your optimizations
+  </Card>
+  <Card title="Debugging" icon="bug" href="/development/debugging">
+    Profile and debug issues
+  </Card>
+  <Card title="Contributing" icon="code-pull-request" href="/development/contributing">
+    Submit performance improvements
+  </Card>
+</CardGroup>

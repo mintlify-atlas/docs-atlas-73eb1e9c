@@ -1,0 +1,126 @@
+{
+  "projectType": "general",
+  "projectName": "Ryujinx",
+  "projectDescription": "An open-source Nintendo Switch emulator written in C# with high accuracy and performance.",
+  "theme": "aspen",
+  "primaryColor": "#242b2c",
+  "lightColor": "#040404",
+  "darkColor": null,
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "introduction",
+              "installation",
+              "quickstart",
+              "system-requirements"
+            ]
+          },
+          {
+            "group": "User Guide",
+            "pages": [
+              "user-guide/game-loading",
+              "user-guide/configuration",
+              "user-guide/input-configuration",
+              "user-guide/graphics-settings",
+              "user-guide/audio-settings",
+              "user-guide/dlc-and-mods",
+              "user-guide/troubleshooting"
+            ]
+          },
+          {
+            "group": "Features",
+            "pages": [
+              "features/cpu-emulation",
+              "features/gpu-emulation",
+              "features/audio",
+              "features/input-support",
+              "features/graphics-enhancements",
+              "features/ptc"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Architecture",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "architecture/overview",
+              "architecture/project-structure"
+            ]
+          },
+          {
+            "group": "Core Components",
+            "pages": [
+              "architecture/armeilleure",
+              "architecture/hle",
+              "architecture/graphics-subsystem",
+              "architecture/audio-subsystem",
+              "architecture/memory-management",
+              "architecture/input-system"
+            ]
+          },
+          {
+            "group": "Graphics",
+            "pages": [
+              "architecture/graphics/gpu-emulation",
+              "architecture/graphics/opengl-backend",
+              "architecture/graphics/vulkan-backend",
+              "architecture/graphics/shader-translation"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Development",
+        "groups": [
+          {
+            "group": "Contributing",
+            "pages": [
+              "development/contributing",
+              "development/building",
+              "development/coding-style",
+              "development/pr-guide"
+            ]
+          },
+          {
+            "group": "Development",
+            "pages": [
+              "development/debugging",
+              "development/testing",
+              "development/performance"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "ARMv8 CPU emulation with ARMeilleure JIT compiler",
+    "Maxwell GPU emulation with OpenGL, Vulkan, and Metal support",
+    "HLE (High-Level Emulation) of Nintendo Switch OS services",
+    "Resolution scaling and graphics enhancements (FXAA, FSR, anisotropic filtering)",
+    "Profiled Persistent Translation Cache (PTC) for faster load times",
+    "Multiple audio backends (SDL3, OpenAL, libsoundio)",
+    "Full controller support including Joy-Con and motion controls",
+    "DLC and mod support with runtime patches"
+  ],
+  "publicApiSurface": [
+    "ARMeilleure (CPU emulator/JIT compiler)",
+    "Ryujinx.Graphics.Gpu (GPU context and command processing)",
+    "Ryujinx.Graphics.OpenGL (OpenGL graphics backend)",
+    "Ryujinx.Graphics.Vulkan (Vulkan graphics backend)",
+    "Ryujinx.HLE (High-Level Emulation layer)",
+    "Ryujinx.Audio (Audio processing)",
+    "Ryujinx.Input (Input handling)",
+    "Ryujinx.Memory (Memory management)",
+    "Ryujinx.Horizon (Horizon OS implementation)",
+    "Switch class (Main emulator context)"
+  ]
+}
